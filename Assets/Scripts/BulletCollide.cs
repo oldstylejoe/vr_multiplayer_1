@@ -6,7 +6,9 @@ public class BulletCollide : NetworkBehaviour
 {
     // Uses some code from the Bullet script from SteamVR Network Essentials
 
+    // Lifetime of the bullet when fired
     public float lifeTime = 10f;
+    // Needed to identify the object in the server
     [SyncVar]
     public NetworkInstanceId projectileSourceId;
 
@@ -14,6 +16,7 @@ public class BulletCollide : NetworkBehaviour
     {
         if (!isServer)
             return;
+        // Start timer to destroy
         Invoke("DestroyMe", lifeTime);
     }
     void DestroyMe()
@@ -23,21 +26,29 @@ public class BulletCollide : NetworkBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        // Do not invoke collision methods below if the weapon is hit and do not perform locally
         if (!isServer)
             return;
 
         if (collision.gameObject.tag == "Weapon")
             return;
 
+        // Destroy object on collision
         NetworkServer.Destroy(gameObject);
-        GameObject hit = collision.gameObject;
-        if (hit.gameObject.tag == "Enemy")
+        if (collision.gameObject.tag == "Enemy")
         {
             GameObject.FindWithTag("EnemySpawner").GetComponent<EnemySpawner>().EnemyCount--;
-            Destroy(hit.gameObject);
+            Destroy(collision.gameObject);
             //add an explosion or something
             //destroy the projectile that just caused the trigger collision
-            //EventManager.TriggerEvent("Destroy");
+            // Used to be handled with Event Manager
+            // EventManager.TriggerEvent("Destroy");
+        }
+        else if (collision.gameObject.tag == "Player")
+        {
+            // Game Over Routine 
+            // Need to be defined.
+            Debug.Log("Game Over!!");
         }
 
         // Currently the target dies upon getting hit, so using the health code has been commented out

@@ -2,6 +2,7 @@
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class EnemySpawner : NetworkBehaviour {
     // Enemy Spawning Code - A network replacement of events for the network implementation
@@ -21,21 +22,38 @@ public class EnemySpawner : NetworkBehaviour {
         SpawnEnemies();
     }
 
+    void OnEnable()
+    {
+        EventManager.StartListening("Destroy", SpawnEnemies);
+    }
+
+    void OnDisable()
+    {
+        EventManager.StopListening("Destroy", SpawnEnemies);
+    }
+
     public void SpawnEnemies ()
     {
         // Do not spawn enemies if there are still enemies in the scene.
         if (NumEnemiesSpawned != 0)
             return;
 
+        List<int> indexes = Enumerable.Range(0,locations.Count).ToList();
+
         // Loop through spawn locations to spawn enemies
         for (int i = 0; i < numberOfEnemies; i++)
         {
             // For Randomization of Spawn
-            // var t = locations[Random.Range(0, locations.Count)];
+            var loc = indexes[Random.Range(0, indexes.Count)];
 
-            var enemy = (GameObject)Instantiate(enemyPrefab, locations[i].transform.position, locations[i].transform.rotation);
+            var enemy = (GameObject)Instantiate(enemyPrefab, locations[loc].transform.position, locations[loc].transform.rotation);
             NetworkServer.Spawn(enemy);
             NumEnemiesSpawned++;
+
+            indexes.Remove(loc);
+
+            if (Random.Range(0, 2) == 0)
+                break;
         }
     }
 
