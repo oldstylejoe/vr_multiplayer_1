@@ -7,18 +7,25 @@ public class PlayerController : NetworkBehaviour
 	public GameObject bulletPrefab;
 	private MouseLook mouseLook;
 	public Transform bulletSpawn;
+    public float speed;
 
+    private Rigidbody rb;
 
 	public override void OnStartLocalPlayer()
 	{
+        transform.position = new Vector3(transform.position.x + -1f, transform.position.y + .8f, transform.position.z);
+        transform.rotation = Quaternion.Euler(0,90,0);
 		GetComponent<Renderer>().material.color = Color.blue;
+        rb = GetComponent<Rigidbody>();
 
-		// attach camera to player.. 3rd person view..
-		Camera.main.transform.parent = transform;
-		Camera.main.transform.localPosition = new Vector3 (0, 1.33f, -0.69f);
+        // attach camera to player.. 3rd person view..
+        Camera.main.transform.parent = transform;
+		Camera.main.transform.localPosition = new Vector3 (0, .5f, 0);
 		Camera.main.transform.localRotation = Quaternion.Euler (6.31f, 0, 0);
 
-		mouseLook = new MouseLook ();
+        transform.GetChild(3).parent = Camera.main.transform;
+
+        mouseLook = new MouseLook ();
 		mouseLook.Init (transform, Camera.main.transform);
 	}
 
@@ -31,15 +38,26 @@ public class PlayerController : NetworkBehaviour
 		}
 
 
-		// non vr player input here
-		var x = Input.GetAxis ("Horizontal") * Time.deltaTime * 3.0f;
-		var z = Input.GetAxis ("Vertical") * Time.deltaTime * 3.0f;
+        // non vr player input here
+        var z = Input.GetAxis("Horizontal") * speed * Time.fixedDeltaTime;
+        var x = Input.GetAxis("Vertical") * speed * Time.fixedDeltaTime;
 
-		transform.Translate (x, 0, z);
+        transform.localPosition += new Vector3(x,0,z);
 
-		mouseLook.LookRotation (transform, Camera.main.transform);
+        /*
+		var x = Input.GetAxis ("Horizontal") * transform.right;
+		var z = Input.GetAxis ("Vertical") * transform.forward;
 
-		transform.rotation = Camera.main.transform.rotation;
+        Vector3 velocity = (x + z) * speed;
+        if (velocity != Vector3.zero)
+            rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
+        else
+            rb.velocity = Vector3.zero;
+            */
+
+        mouseLook.LookRotation (transform, Camera.main.transform);
+
+        transform.rotation = Camera.main.transform.rotation;
 
 		// common input here
 		if (Input.GetKeyDown(KeyCode.Space))
@@ -47,7 +65,6 @@ public class PlayerController : NetworkBehaviour
 			CmdFire();
 		}
 	}
-
 
 	// This [Command] code is called on the Client …
 	// … but it is run on the Server!
