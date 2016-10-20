@@ -53,14 +53,13 @@ public class BulletCollide : NetworkBehaviour
 
         // Currently the target dies upon getting hit, so using the health code has been commented out
         // and is here as a placeholder in case this is used later
-        /*
+
         //If target has health, take damage
-        var health = hit.GetComponent<Health>();
+        var health = collision.gameObject.GetComponent<Health>();
         if (health != null)
         {
             health.TakeDamage(10);
         }
-        */
     }
 
     /* Original Code

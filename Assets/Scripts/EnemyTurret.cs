@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-public class EnemyTurret : NetworkBehaviour
+public class EnemyTurret : NetworkBehaviour, ITouchable
 {
     // Enemy AI code to make the Enemy act like a turret.
     /*
@@ -16,7 +16,7 @@ public class EnemyTurret : NetworkBehaviour
     public GameObject bulletPrefab;
     public Transform bulletSpawn;
     public Transform gun;
-    public float bulletSpeed;
+    public float bulletSpeed = 6f;
     public float fireRate = 1f;
 
     private GameObject target;
@@ -65,7 +65,6 @@ public class EnemyTurret : NetworkBehaviour
 
         if (!target)
         {
-            Debug.Log("triggered");
             if (other.gameObject.tag == "Player")
                 target = other.gameObject;
         }
@@ -76,7 +75,6 @@ public class EnemyTurret : NetworkBehaviour
     {
         if (!target)
         {
-            Debug.Log("triggered");
             if (other.gameObject.tag == "Player")
                 target = other.gameObject;
         }
@@ -87,10 +85,19 @@ public class EnemyTurret : NetworkBehaviour
     {
         if (target)
         {
-            Debug.Log("Relief");
             if (other.gameObject == target)
                 target = null;
         }
+    }
+
+    public void Touch(NetworkInstanceId handId)
+    {
+        Debug.Log("triggered");
+    }
+
+    public void Untouch(NetworkInstanceId handId)
+    {
+        Debug.Log("Relief");
     }
 
     // This is borrowed from the original gun script.
@@ -106,7 +113,7 @@ public class EnemyTurret : NetworkBehaviour
             bulletSpawn.rotation);
 
         // Add velocity to the bullet
-        bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * 6;
+        bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * bulletSpeed;
 
         // Spawn the bullet on the Clients
         NetworkServer.Spawn(bullet);
