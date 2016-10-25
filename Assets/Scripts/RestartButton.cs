@@ -13,8 +13,12 @@ public class RestartButton : NetworkBehaviour, ITouchable
     private Vector3 Pos1;
     private Vector3 Pos2;
 
+    private DataLogger datalogger;
+
     void Start()
     {
+        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
+
         // Get the EnemySpawner GameObject
         if (!enemyspawner)
             enemyspawner = GameObject.FindWithTag("EnemySpawner").GetComponent<EnemySpawner>();
@@ -33,6 +37,8 @@ public class RestartButton : NetworkBehaviour, ITouchable
     {
         if (enemyspawner.EnemyCount != 0)
             return;
+
+        datalogger.RecordButtonPress();
         // Button has been used, Spawn enemies
         enemyspawner.SpawnEnemies();
         if (transform.parent.localPosition == Pos1)

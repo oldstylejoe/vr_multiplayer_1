@@ -8,6 +8,8 @@ public class BulletCollide : NetworkBehaviour
 
     // Lifetime of the bullet when fired
     public float lifeTime = 10f;
+
+    private DataLogger datalogger;
     // Needed to identify the object in the server
     [SyncVar]
     public NetworkInstanceId projectileSourceId;
@@ -18,6 +20,8 @@ public class BulletCollide : NetworkBehaviour
             return;
         // Start timer to destroy
         Invoke("DestroyMe", lifeTime);
+        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
+        datalogger.RecordShotFired(this.transform.position);
     }
     void DestroyMe()
     {
@@ -38,6 +42,7 @@ public class BulletCollide : NetworkBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             GameObject.FindWithTag("EnemySpawner").GetComponent<EnemySpawner>().EnemyCount--;
+            datalogger.RemoveEnemy(collision.gameObject);
             Destroy(collision.gameObject);
             //add an explosion or something
             //destroy the projectile that just caused the trigger collision
@@ -60,6 +65,8 @@ public class BulletCollide : NetworkBehaviour
         {
             health.TakeDamage(10);
         }
+
+        datalogger.RecordHit(collision.gameObject);
     }
 
     /* Original Code

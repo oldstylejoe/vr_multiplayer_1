@@ -1,22 +1,20 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
-
 public class PlayerController : NetworkBehaviour
 {
+    // Slight modifications made to Steam VR Network Essentials code for aim clamping and correct movement
+
 	public GameObject bulletPrefab;
 	private MouseLook mouseLook;
 	public Transform bulletSpawn;
     public float speed;
 
-    private Rigidbody rb;
-
-	public override void OnStartLocalPlayer()
+    public override void OnStartLocalPlayer()
 	{
         transform.position = new Vector3(transform.position.x + -1f, transform.position.y + .8f, transform.position.z);
         transform.rotation = Quaternion.Euler(0,90,0);
 		GetComponent<Renderer>().material.color = Color.blue;
-        rb = GetComponent<Rigidbody>();
 
         // attach camera to player.. 3rd person view..
         Camera.main.transform.parent = transform;
@@ -39,25 +37,15 @@ public class PlayerController : NetworkBehaviour
 
 
         // non vr player input here
-        var z = Input.GetAxis("Horizontal") * speed * Time.fixedDeltaTime;
-        var x = Input.GetAxis("Vertical") * speed * Time.fixedDeltaTime;
+        var x = Input.GetAxis("Horizontal") * speed * Time.fixedDeltaTime;
+        var z = Input.GetAxis("Vertical") * speed * Time.fixedDeltaTime;
 
-        transform.localPosition += new Vector3(x,0,z);
-
-        /*
-		var x = Input.GetAxis ("Horizontal") * transform.right;
-		var z = Input.GetAxis ("Vertical") * transform.forward;
-
-        Vector3 velocity = (x + z) * speed;
-        if (velocity != Vector3.zero)
-            rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
-        else
-            rb.velocity = Vector3.zero;
-            */
+        transform.Translate(new Vector3(x,0,z));
 
         mouseLook.LookRotation (transform, Camera.main.transform);
 
-        transform.rotation = Camera.main.transform.rotation;
+        // For flight.
+        //transform.rotation = Camera.main.transform.rotation;
 
 		// common input here
 		if (Input.GetKeyDown(KeyCode.Space))
