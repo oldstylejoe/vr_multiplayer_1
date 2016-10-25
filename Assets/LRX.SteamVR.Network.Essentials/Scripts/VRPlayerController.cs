@@ -5,7 +5,7 @@ using System;
 
 public class VRPlayerController : NetworkBehaviour
 {
-	public GameObject vrCameraRig;
+    public GameObject vrCameraRig;
 	public GameObject leftHandPrefab;
     public GameObject rightHandPrefab;
     public GameObject HUD;
@@ -15,8 +15,9 @@ public class VRPlayerController : NetworkBehaviour
 	{
 		if (!isClient)
 			return;
-		// delete main camera
-		DestroyImmediate (Camera.main.gameObject);
+
+        // delete main camera
+        DestroyImmediate (Camera.main.gameObject);
 
 		// create camera rig and attach player model to it
 		vrCameraRigInstance = (GameObject)Instantiate (

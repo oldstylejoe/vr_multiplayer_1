@@ -23,6 +23,13 @@ public class EnemyTurret : NetworkBehaviour, ITouchable
     private Vector3 lastKnownPosition = Vector3.zero;
     private Quaternion lookoutRotation;
     private float fireTimer = 0.0f;
+    private DataLogger datalogger;
+
+    void Start()
+    {
+        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
+        datalogger.AddEnemy(this.gameObject);
+    }
 
     void Update()
     {

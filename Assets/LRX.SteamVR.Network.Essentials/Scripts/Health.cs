@@ -41,7 +41,8 @@ public class Health : NetworkBehaviour
 
 	void OnChangeHealth (int currentHealth)
 	{
-		GetComponentInChildren<TextMesh> ().text = currentHealth.ToString();
+        if(GetComponentInChildren<TextMesh>())
+		    GetComponentInChildren<TextMesh> ().text = currentHealth.ToString();
 	}
 
 	[ClientRpc]
