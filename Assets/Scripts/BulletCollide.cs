@@ -20,12 +20,19 @@ public class BulletCollide : NetworkBehaviour
             return;
         // Start timer to destroy
         Invoke("DestroyMe", lifeTime);
-        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
-        datalogger.RecordShotFired(this.transform.position);
+
+        GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
+
+        if (dataloggerTest)
+            datalogger = dataloggerTest.GetComponent<DataLogger>();
+        if(datalogger)
+            datalogger.AddBullet(this.gameObject);
     }
     void DestroyMe()
     {
         NetworkServer.Destroy(gameObject);
+        if (datalogger)
+            datalogger.RemoveBullet(this.gameObject);
     }
 
     void OnCollisionEnter(Collision collision)
@@ -42,7 +49,8 @@ public class BulletCollide : NetworkBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             GameObject.FindWithTag("EnemySpawner").GetComponent<EnemySpawner>().EnemyCount--;
-            datalogger.RemoveEnemy(collision.gameObject);
+            if (datalogger)
+                datalogger.RemoveEnemy(collision.gameObject);
             Destroy(collision.gameObject);
             //add an explosion or something
             //destroy the projectile that just caused the trigger collision
@@ -66,7 +74,8 @@ public class BulletCollide : NetworkBehaviour
             health.TakeDamage(10);
         }
 
-        datalogger.RecordHit(collision.gameObject);
+        if (datalogger)
+            datalogger.RecordHit(collision.gameObject);
     }
 
     /* Original Code

@@ -16,12 +16,6 @@ public class EnemySpawner : NetworkBehaviour {
     [SyncVar]
     private int NumEnemiesSpawned = 0;
 
-    public override void OnStartServer()
-    {
-        // Server has started, spawn enemies.
-        SpawnEnemies();
-    }
-
     void OnEnable()
     {
         EventManager.StartListening("Destroy", SpawnEnemies);

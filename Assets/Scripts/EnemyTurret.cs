@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
-public class EnemyTurret : NetworkBehaviour, ITouchable
+public class EnemyTurret : NetworkBehaviour
 {
     // Enemy AI code to make the Enemy act like a turret.
     /*
@@ -22,13 +22,20 @@ public class EnemyTurret : NetworkBehaviour, ITouchable
     private GameObject target;
     private Vector3 lastKnownPosition = Vector3.zero;
     private Quaternion lookoutRotation;
+    private Quaternion RestRotation;
     private float fireTimer = 0.0f;
     private DataLogger datalogger;
 
     void Start()
     {
-        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
-        datalogger.AddEnemy(this.gameObject);
+        RestRotation = transform.rotation;
+
+        GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
+
+        if (dataloggerTest)
+            datalogger = dataloggerTest.GetComponent<DataLogger>();
+        if (datalogger)
+            datalogger.AddEnemy(this.gameObject);
     }
 
     void Update()
@@ -62,11 +69,16 @@ public class EnemyTurret : NetworkBehaviour, ITouchable
                 fireTimer = 0.0f;
             }
         }
+        else
+        {
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, RestRotation, rotationSpeed * Time.deltaTime);
+        }
     }
 
     // 10% chance to see player when they enter field of view (trigger)
     void OnTriggerEnter (Collider other)
     {
+        Debug.Log(other.gameObject);
         if (Random.Range(0, 10) != 1)
             return;
 
@@ -95,16 +107,6 @@ public class EnemyTurret : NetworkBehaviour, ITouchable
             if (other.gameObject == target)
                 target = null;
         }
-    }
-
-    public void Touch(NetworkInstanceId handId)
-    {
-        Debug.Log("triggered");
-    }
-
-    public void Untouch(NetworkInstanceId handId)
-    {
-        Debug.Log("Relief");
     }
 
     // This is borrowed from the original gun script.

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
+using System.Collections;
 
 public class RestartButton : NetworkBehaviour, ITouchable
 {
@@ -9,15 +10,23 @@ public class RestartButton : NetworkBehaviour, ITouchable
 
     // Get EnemySpawner 
     public EnemySpawner enemyspawner;
+    public GameObject WaitingWall;
 
     private Vector3 Pos1;
     private Vector3 Pos2;
+    private Vector3 WallRestPos;
+    private Vector3 WallPos;
+    private Quaternion WallRestRot;
+    private Quaternion WallRot;
 
-    private DataLogger datalogger;
+    private DataLogger datalogger = null;
 
     void Start()
     {
-        datalogger = GameObject.FindGameObjectWithTag("DataLogger").GetComponent<DataLogger>();
+        GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
+
+        if (dataloggerTest)
+            datalogger = dataloggerTest.GetComponent<DataLogger>();
 
         // Get the EnemySpawner GameObject
         if (!enemyspawner)
@@ -26,25 +35,48 @@ public class RestartButton : NetworkBehaviour, ITouchable
         if (!enemyspawner)
             Debug.Log("Error: Need to include EnemySpawner gameobject in scene and add a reference to this script");
 
-        // Column Positions
-        Pos1 = transform.parent.position;
-        Pos2 = Pos1 + new Vector3(-2.8f,0,0);
+        // Waiting Wall Positions
+        if (WaitingWall)
+        {
+            WallRestPos = WaitingWall.transform.position;
+            WallRestRot = WaitingWall.transform.rotation;
+
+            WallPos = new Vector3(0.6f,0,0);
+            WallRot = Quaternion.Euler(0,0,-90);
+        }
     }
 
     // This restarts the task.
     // The column moves to the other side and enemies respawned.
-    private void ResetScene ()
+    private void ResetScene()
     {
         if (enemyspawner.EnemyCount != 0)
             return;
 
-        datalogger.RecordButtonPress();
+        if (datalogger)
+            datalogger.RecordButtonPress();
+
+        if (WaitingWall)
+        {
+            WaitingWall.transform.position = WallPos;
+            WaitingWall.transform.rotation = WallRot;
+        }
+
+        StartCoroutine(WaitforReset(5f));
+    }
+
+    private IEnumerator WaitforReset(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+
         // Button has been used, Spawn enemies
         enemyspawner.SpawnEnemies();
-        if (transform.parent.localPosition == Pos1)
-            transform.parent.localPosition = Pos2;
-        else
-            transform.parent.localPosition = Pos1;
+
+        if (WaitingWall)
+        {
+            WaitingWall.transform.position = WallRestPos;
+            WaitingWall.transform.rotation = WallRestRot;
+        }
     }
 
     // This is for the controller part
