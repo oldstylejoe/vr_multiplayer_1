@@ -5,24 +5,25 @@ using System.Collections;
 public class RestartButton : NetworkBehaviour, ITouchable
 {
     // This is the Restart Button code. 
-    // Purpose: When the button is touched, the enemies will be respawned and
-    //          the button and its column will moved to the end of the other hallway.
+    // Purpose: When the button is touched, a wall will appear 
+    //          to tell the players not to move forward for RespawnTimer
+    //          seconds. After those seconds, it
 
+    // Respawn Timer Constant
+    public float RespawnTimer = 5f;
     // Get EnemySpawner 
     public EnemySpawner enemyspawner;
+    // Get our Waiting Wall Object
     public GameObject WaitingWall;
 
-    private Vector3 Pos1;
-    private Vector3 Pos2;
-    private Vector3 WallRestPos;
-    private Vector3 WallPos;
-    private Quaternion WallRestRot;
-    private Quaternion WallRot;
-
+    // DataLogger Script from Datalogger object
     private DataLogger datalogger = null;
+    // Check to see coroutine for respawning is running
+    private bool Respawning = false;
 
     void Start()
     {
+        // Datalogger Initialize
         GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
 
         if (dataloggerTest)
@@ -33,40 +34,43 @@ public class RestartButton : NetworkBehaviour, ITouchable
             enemyspawner = GameObject.FindWithTag("EnemySpawner").GetComponent<EnemySpawner>();
 
         if (!enemyspawner)
-            Debug.Log("Error: Need to include EnemySpawner gameobject in scene and add a reference to this script");
+            Debug.LogError("Error: Need to include EnemySpawner gameobject in scene and add a reference to this script", enemyspawner);
 
-        // Waiting Wall Positions
+        // Check if a Waiting Wall is used and turn it off for the start
         if (WaitingWall)
         {
-            WallRestPos = WaitingWall.transform.position;
-            WallRestRot = WaitingWall.transform.rotation;
-
-            WallPos = new Vector3(0.6f,0,0);
-            WallRot = Quaternion.Euler(0,0,-90);
+            WaitingWall.GetComponent<MeshRenderer>().enabled = false;
         }
     }
 
     // This restarts the task.
-    // The column moves to the other side and enemies respawned.
+    // A wall appears for RespawnTimer seconds and then the Enemies Spawn
     private void ResetScene()
     {
+        // Check if all enemies have been taken out
         if (enemyspawner.EnemyCount != 0)
             return;
 
+        // Record press
         if (datalogger)
             datalogger.RecordButtonPress();
 
+        // Spawn WaitingWall for RespawnTimer seconds
         if (WaitingWall)
         {
-            WaitingWall.transform.position = WallPos;
-            WaitingWall.transform.rotation = WallRot;
+            WaitingWall.GetComponent<MeshRenderer>().enabled = true;
         }
 
-        StartCoroutine(WaitforReset(5f));
+        StartCoroutine(WaitforReset(RespawnTimer));
     }
 
     private IEnumerator WaitforReset(float waitTime)
     {
+        if (Respawning)
+            yield break;
+
+        Respawning = true;
+
         yield return new WaitForSeconds(waitTime);
 
         // Button has been used, Spawn enemies
@@ -74,9 +78,10 @@ public class RestartButton : NetworkBehaviour, ITouchable
 
         if (WaitingWall)
         {
-            WaitingWall.transform.position = WallRestPos;
-            WaitingWall.transform.rotation = WallRestRot;
+            WaitingWall.GetComponent<MeshRenderer>().enabled = false;
         }
+
+        Respawning = false;
     }
 
     // This is for the controller part
