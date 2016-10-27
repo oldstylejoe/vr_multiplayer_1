@@ -30,6 +30,7 @@ public class EnemyTurret : NetworkBehaviour
     {
         RestRotation = transform.rotation;
 
+        // Check for DataLogger Object
         GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
 
         if (dataloggerTest)
@@ -78,7 +79,6 @@ public class EnemyTurret : NetworkBehaviour
     // 10% chance to see player when they enter field of view (trigger)
     void OnTriggerEnter (Collider other)
     {
-        Debug.Log(other.gameObject);
         if (Random.Range(0, 10) != 1)
             return;
 

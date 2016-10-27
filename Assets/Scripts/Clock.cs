@@ -2,6 +2,8 @@
 //  (make a blank object if you have to).
 //Need to call the awake function.
 
+// Edits made: Folder and File are now made automatically if they do not exist. 
+
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System.IO;

@@ -4,6 +4,20 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class DataLogger : MonoBehaviour {
+
+    // This is the DataLogger code
+    // Purpose: Log the data to a file using Clocks file for format
+    // Data logged for VR and nonVR:
+    //              Enemy Transform and Rotation
+    //              Bullet Transform and Rotation
+    //              Game Reset (Button Pressed)
+    //              Object hit
+    // Data logged for VR:
+    //              Player body and hands Transform and Rotation
+    // Data logged for nonVR: 
+    //              Player object
+    // All commented out Debug.Log calls are to test outputs
+
     private GameObject Player;
     private GameObject RightHand;
     private GameObject LeftHand;
@@ -125,6 +139,7 @@ public class DataLogger : MonoBehaviour {
             Clock.markEvent(Victim + " " + "Hit");
     }
 
+    // List access from other functions, such as BulletCollide and EnemyTurret
     #region Enemy List Access
     public void AddEnemy(GameObject newEnemy)
     {
