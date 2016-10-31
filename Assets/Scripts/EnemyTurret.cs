@@ -17,6 +17,7 @@ public class EnemyTurret : NetworkBehaviour
     public Transform bulletSpawn;
     public Transform gun;
     public float bulletSpeed = 6f;
+    public float startFireRate = 0.100f;
     public float fireRate = 1f;
 
     private GameObject target;
@@ -25,18 +26,25 @@ public class EnemyTurret : NetworkBehaviour
     private Quaternion RestRotation;
     private float fireTimer = 0.0f;
     private DataLogger datalogger;
+    private bool fireFaster = false;
+
+    // Necessary to add to enemy count when spawned
+    public EnemySpawner enemyspawner;
 
     void Start()
     {
         RestRotation = transform.rotation;
 
+        EventManager.TriggerEvent("EnemyInc");
+
         // Check for DataLogger Object
         GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
 
         if (dataloggerTest)
+        {
             datalogger = dataloggerTest.GetComponent<DataLogger>();
-        if (datalogger)
-            datalogger.AddEnemy(this.gameObject);
+            datalogger.AddEnemy(this.transform);
+        }
     }
 
     void Update()
@@ -59,9 +67,21 @@ public class EnemyTurret : NetworkBehaviour
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, lookoutRotation, rotationSpeed * Time.deltaTime);
             }
 
-            // Check when 2 seconds have passed and then fire.
+            // Check when fireRate seconds have passed and then fire.
             fireTimer += Time.deltaTime;
-            if (fireTimer >= fireRate)
+            if (!fireFaster)
+            {
+                if (fireTimer >= startFireRate)
+                {
+                    if (Random.Range(0, 2) == 1)
+                    {
+                        CmdFire();
+                    }
+                    fireTimer = 0.0f;
+                    fireFaster = true;
+                }
+            }
+            else if (fireTimer >= fireRate)
             {
                 if (Random.Range(0, 2) == 1)
                 {
@@ -119,7 +139,7 @@ public class EnemyTurret : NetworkBehaviour
         var bullet = (GameObject)Instantiate(
             bulletPrefab,
             bulletSpawn.position,
-            bulletSpawn.rotation);
+            bulletSpawn.rotation * Quaternion.Euler(Random.Range(-10.0f,10.0f), Random.Range(-10.0f, 10.0f), 0f));
 
         // Add velocity to the bullet
         bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * bulletSpeed;

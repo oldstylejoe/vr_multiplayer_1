@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,25 +10,34 @@ public class EnemySpawner : NetworkBehaviour {
     // Purpose: Spawn enemies on start at transform locations set in the inspector
 
     public GameObject enemyPrefab;
-    public int numberOfEnemies;
-
     public List<GameObject> locations;
+
+    private int numberOfEnemies;
 
     [SyncVar]
     private int NumEnemiesSpawned = 0;
 
+    void Start ()
+    {
+        numberOfEnemies = locations.Count;
+    }
+
     void OnEnable()
     {
-        EventManager.StartListening("Destroy", SpawnEnemies);
+        EventManager.StartListening("Spawn", SpawnEnemies);
+        EventManager.StartListening("EnemyInc", EnemyInc);
+        EventManager.StartListening("EnemyDec", EnemyDec);
     }
 
     void OnDisable()
     {
-        EventManager.StopListening("Destroy", SpawnEnemies);
+        EventManager.StopListening("Spawn", SpawnEnemies);
+        EventManager.StopListening("EnemyInc", EnemyInc);
+        EventManager.StopListening("EnemyDec", EnemyDec);
     }
 
     public void SpawnEnemies ()
-    {    
+    {
         // Do not spawn enemies if there are still enemies in the scene.
         if (NumEnemiesSpawned != 0)
             return;
@@ -42,7 +52,6 @@ public class EnemySpawner : NetworkBehaviour {
 
             var enemy = (GameObject)Instantiate(enemyPrefab, locations[loc].transform.position, locations[loc].transform.rotation);
             NetworkServer.Spawn(enemy);
-            NumEnemiesSpawned++;
 
             indexes.Remove(loc);
 
@@ -51,20 +60,19 @@ public class EnemySpawner : NetworkBehaviour {
         }
     }
 
-    // Getter and Setter EnemyCount allows for NumEnemiesSpawned variable to be changed out of scope.
+    // Events for the NumEnemiesSpawned allows for NumEnemiesSpawned variable to be changed out of scope.
+    public void EnemyInc ()
+    {
+        NumEnemiesSpawned++;
+    }
+
+    public void EnemyDec ()
+    {
+        NumEnemiesSpawned--;
+    }
+
     public int EnemyCount
     {
-        get
-        {
-            return NumEnemiesSpawned;
-        }
-
-        set
-        {
-            if (!isServer)
-                return;
-
-            NumEnemiesSpawned = value;
-        }
+        get { return NumEnemiesSpawned; }
     }
 }

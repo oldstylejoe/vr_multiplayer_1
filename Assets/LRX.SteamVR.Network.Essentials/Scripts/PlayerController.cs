@@ -10,6 +10,8 @@ public class PlayerController : NetworkBehaviour
 	public Transform bulletSpawn;
     public float speed;
 
+
+    private DataLogger datalogger;
     public override void OnStartLocalPlayer()
 	{
         transform.position = new Vector3(transform.position.x + -1f, transform.position.y + .8f, transform.position.z);
@@ -25,7 +27,18 @@ public class PlayerController : NetworkBehaviour
 
         mouseLook = new MouseLook ();
 		mouseLook.Init (transform, Camera.main.transform);
-	}
+
+        // Check for DataLogger Object
+        GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
+
+        if (dataloggerTest)
+        {
+            datalogger = dataloggerTest.GetComponent<DataLogger>();
+            datalogger.Player = gameObject.transform;
+            datalogger.LeftHand = null;
+            datalogger.RightHand = null;
+        }
+    }
 
 	void Update()
 	{

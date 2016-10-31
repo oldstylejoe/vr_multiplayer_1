@@ -3,7 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
-public class DataLogger : MonoBehaviour {
+public class DataLogger : NetworkBehaviour {
 
     // This is the DataLogger code
     // Purpose: Log the data to a file using Clocks file for format
@@ -18,19 +18,16 @@ public class DataLogger : MonoBehaviour {
     //              Player object
     // All commented out Debug.Log calls are to test outputs
 
-    private GameObject Player;
-    private GameObject RightHand;
-    private GameObject LeftHand;
-    private List<GameObject> Enemies;
-    private List<GameObject> Bullets;
-    private bool isVR;
+    public Transform Player;
+    public Transform RightHand;
+    public Transform LeftHand;
+    private List<Transform> Enemies;
+    private List<Transform> Bullets;
 
     void Start ()
     {
-        Enemies = new List<GameObject>();
-        Bullets = new List<GameObject>();
-
-        isVR = false;
+        Enemies = new List<Transform>();
+        Bullets = new List<Transform>();
     }
 	
 	// Update is called once per frame
@@ -44,49 +41,33 @@ public class DataLogger : MonoBehaviour {
     {
         if (!Player)
         {
-            GameObject[] Players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (GameObject P in Players)
-            {
-                if (P.GetComponent<NetworkIdentity>().isLocalPlayer)
-                {
-                    Player = P;
-                    if (Player.GetComponent<VRPlayerController>())
-                        isVR = true;
-                }
-            }
+            return;
         }
         else
         {
             //Record Positions
             //Debug.Log("Player " + Player.transform.position + " " + Player.transform.rotation);
-            Clock.markEvent("Player " + Player.transform.position + " " + Player.transform.rotation);
+            Vector3 PlayerPos = Player.position;
+            Quaternion PlayerRot = Player.rotation;
+            Clock.markEvent("Player " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
         }
 
-        if (isVR)
+        if (RightHand)
         {
-            if (!RightHand)
-            {
-                if(Player.transform.parent.transform.parent.transform.GetChild(1).childCount > 1)
-                    RightHand = Player.transform.parent.transform.parent.transform.GetChild(1).GetChild(1).gameObject;
-            }
-            else
-            {
-                //Record Positions
-                //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
-                Clock.markEvent("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
-            }
+            //Record Positions
+            //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
+            Vector3 RightHandPos = RightHand.position;
+            Quaternion RightHandRot = RightHand.rotation;
+            Clock.markEvent("RightHand " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
+        }
 
-            if (!LeftHand)
-            {
-                if (Player.transform.parent.transform.parent.transform.GetChild(0).childCount > 1)
-                    LeftHand = Player.transform.parent.transform.parent.transform.GetChild(0).GetChild(1).gameObject;
-            }
-            else
-            {
-                //Record Positions
-                //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
-                Clock.markEvent("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
-            }
+        if (LeftHand)
+        {
+            //Record Positions
+            //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
+            Vector3 LeftHandPos = LeftHand.position;
+            Quaternion LeftHandRot = LeftHand.rotation;
+            Clock.markEvent("LeftHand " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
         }
     }
 
@@ -94,13 +75,15 @@ public class DataLogger : MonoBehaviour {
     {
         if (Enemies.Count != 0)
         {
-            foreach(GameObject Enemy in Enemies)
+            foreach(Transform Enemy in Enemies)
             {
                 //Record Positions
                 if (Enemy)
                 {
                     //Debug.Log("Enemy " + Enemy.transform.position + " " + Enemy.transform.rotation);
-                    Clock.markEvent("Enemy " + Enemy.transform.position + " " + Enemy.transform.rotation);
+                    Vector3 EnemyPos = Enemy.position;
+                    Quaternion EnemyRot = Enemy.rotation;
+                    Clock.markEvent("Enemy " + EnemyPos.x + " " + EnemyPos.y + " " + EnemyPos.z + " " + EnemyRot.x + " " + EnemyRot.y + " " + EnemyRot.z);
                 }
             }
         }
@@ -110,13 +93,15 @@ public class DataLogger : MonoBehaviour {
     {
         if (Bullets.Count != 0)
         {
-            foreach(GameObject Bullet in Bullets)
+            foreach(Transform Bullet in Bullets)
             {
                 //Record Positions
                 if (Bullet)
                 {
                     //Debug.Log("Bullet " + Bullet.transform.position + " " + Bullet.transform.rotation);
-                    Clock.markEvent("Bullet " + Bullet.transform.position + " " + Bullet.transform.rotation);
+                    Vector3 BulletPos = Bullet.position;
+                    Quaternion BulletRot = Bullet.rotation;
+                    Clock.markEvent("Bullet " + BulletPos.x + " " + BulletPos.y + " " + BulletPos.z + " " + BulletRot.x + " " + BulletRot.y + " " + BulletRot.z);
                 }
             }
         }
@@ -124,7 +109,7 @@ public class DataLogger : MonoBehaviour {
 
     public void RecordButtonPress()
     {
-        Clock.markEvent("Button Pressed");
+        Clock.markEvent("ButtonPressed");
     }
 
     public void RecordHit (GameObject hit)
@@ -136,29 +121,29 @@ public class DataLogger : MonoBehaviour {
             Victim = "Enemy, ";
         
         if (Victim != "")
-            Clock.markEvent(Victim + " " + "Hit");
+            Clock.markEvent(Victim + "Hit");
     }
 
     // List access from other functions, such as BulletCollide and EnemyTurret
     #region Enemy List Access
-    public void AddEnemy(GameObject newEnemy)
+    public void AddEnemy(Transform newEnemy)
     {
         Enemies.Add(newEnemy);
     }
 
-    public void RemoveEnemy(GameObject deadEnemy)
+    public void RemoveEnemy(Transform deadEnemy)
     {
         Enemies.Remove(deadEnemy);
     }
     #endregion
 
     #region Bullet List Access
-    public void AddBullet(GameObject newBullet)
+    public void AddBullet(Transform newBullet)
     {
         Bullets.Add(newBullet);
     }
 
-    public void RemoveBullet(GameObject deadBullet)
+    public void RemoveBullet(Transform deadBullet)
     {
         Bullets.Remove(deadBullet);
     }

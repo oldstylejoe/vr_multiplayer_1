@@ -9,6 +9,8 @@ public class VRPlayerController : NetworkBehaviour
 	public GameObject leftHandPrefab;
     public GameObject rightHandPrefab;
     public GameObject HUD;
+
+    private DataLogger datalogger;
     private GameObject vrCameraRigInstance;
 
 	public override void OnStartLocalPlayer ()
@@ -33,7 +35,16 @@ public class VRPlayerController : NetworkBehaviour
 		transform.parent = head.transform;
         transform.localPosition = new Vector3(0f, -0.03f, -0.06f);
 
-		TryDetectControllers ();
+        // Check for DataLogger Object
+        GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");
+
+        if (dataloggerTest)
+        {
+            datalogger = dataloggerTest.GetComponent<DataLogger>();
+            datalogger.Player = head.transform;
+        }
+
+        TryDetectControllers ();
 	}
 
 	void TryDetectControllers ()
@@ -41,7 +52,12 @@ public class VRPlayerController : NetworkBehaviour
 		var controllers = vrCameraRigInstance.GetComponentsInChildren<SteamVR_TrackedObject> ();
         if (controllers != null && controllers.Length == 2 && controllers[0] != null && controllers[1] != null)
         {
-			CmdSpawnHands(netId);
+            if (datalogger)
+            {
+                datalogger.LeftHand = vrCameraRigInstance.GetComponent<SteamVR_ControllerManager>().left.transform;
+                datalogger.RightHand = vrCameraRigInstance.GetComponent<SteamVR_ControllerManager>().right.transform;
+            }
+            CmdSpawnHands(netId);
         }
         else
         {
@@ -68,7 +84,7 @@ public class VRPlayerController : NetworkBehaviour
 
 		NetworkServer.SpawnWithClientAuthority (leftHand, base.connectionToClient);
 		NetworkServer.SpawnWithClientAuthority (rightHand, base.connectionToClient);
-	}
+    }
 
 	[Command]
 	public void CmdGrab(NetworkInstanceId objectId, NetworkInstanceId controllerId)

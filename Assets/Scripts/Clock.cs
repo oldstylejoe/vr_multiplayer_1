@@ -8,16 +8,27 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System.IO;
 using System;
+using System.Collections;
 
 public class Clock : MonoBehaviour
 {
 
     [DllImport("Kernel32.dll", CallingConvention = CallingConvention.Winapi)]
     public static extern void GetSystemTimePreciseAsFileTime(out long filetime);
+    public static string StrBuffer;
+    public static Clock instance;
 
     private static string subjName;
+    private static bool Writing = false;
     void Awake()
     {
+        if (instance == null)
+            instance = this;
+        else
+        {
+            Debug.LogError("Error: Too many clocks.");
+        }
+
         subjName = "default";
 
         // Create filePath if it does not exist
@@ -39,8 +50,20 @@ public class Clock : MonoBehaviour
         }
     }
 
-    public static void write(string str)
+    public static IEnumerator write(string str)
     {
+        StrBuffer += str;
+
+        if (Writing)
+            yield break;
+
+        Writing = true;
+
+        while (sizeof(char) * StrBuffer.Length < 10000)
+        {
+            yield return null;
+        }
+
         var t = DateTime.Now;
 
         // Create filePath if it does not exist
@@ -54,9 +77,12 @@ public class Clock : MonoBehaviour
         fname += t.Hour.ToString() + ".txt";
 
         System.IO.StreamWriter file = new System.IO.StreamWriter(fname, true);
-        file.WriteLine(str);
+        file.WriteLine(StrBuffer);
 
         file.Close();
+
+        StrBuffer = "";
+        Writing = false;
     }
 
     //automate the time stamping. Slight loss of precision is possible (but unlikely).
@@ -66,7 +92,6 @@ public class Clock : MonoBehaviour
         GetSystemTimePreciseAsFileTime(out fTest);
         System.DateTime dt = new System.DateTime(1601, 01, 01).AddTicks(fTest);
         dt = dt.ToLocalTime();
-        write(str + " " + subjName + " " + dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + " " + fTest.ToString());
+        instance.StartCoroutine(write(str + " " + subjName + " " + dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + " " + fTest.ToString() + Environment.NewLine));
     }
-
 }

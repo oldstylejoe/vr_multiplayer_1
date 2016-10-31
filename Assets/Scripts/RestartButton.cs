@@ -20,6 +20,8 @@ public class RestartButton : NetworkBehaviour, ITouchable
     private DataLogger datalogger = null;
     // Check to see coroutine for respawning is running
     private bool Respawning = false;
+    private Vector3 WaitPos;
+    private Vector3 GoPos;
 
     void Start()
     {
@@ -36,10 +38,13 @@ public class RestartButton : NetworkBehaviour, ITouchable
         if (!enemyspawner)
             Debug.LogError("Error: Need to include EnemySpawner gameobject in scene and add a reference to this script", enemyspawner);
 
-        // Check if a Waiting Wall is used and turn it off for the start
+        // Check if a Waiting Wall is used and then lower it to hide it
         if (WaitingWall)
         {
-            WaitingWall.GetComponent<MeshRenderer>().enabled = false;
+            WaitPos = WaitingWall.transform.position;
+            Debug.Log(WaitPos);
+            GoPos = WaitPos + new Vector3(0, -4, 0);
+            WaitingWall.transform.position = GoPos;
         }
     }
 
@@ -55,10 +60,10 @@ public class RestartButton : NetworkBehaviour, ITouchable
         if (datalogger)
             datalogger.RecordButtonPress();
 
-        // Spawn WaitingWall for RespawnTimer seconds
+        // Raise WaitingWall for RespawnTimer seconds
         if (WaitingWall)
         {
-            WaitingWall.GetComponent<MeshRenderer>().enabled = true;
+            WaitingWall.transform.position = WaitPos;
         }
 
         StartCoroutine(WaitforReset(RespawnTimer));
@@ -78,7 +83,7 @@ public class RestartButton : NetworkBehaviour, ITouchable
 
         if (WaitingWall)
         {
-            WaitingWall.GetComponent<MeshRenderer>().enabled = false;
+            WaitingWall.transform.position = GoPos;
         }
 
         Respawning = false;
