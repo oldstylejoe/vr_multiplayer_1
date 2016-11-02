@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 
 public class Health : NetworkBehaviour 
@@ -7,7 +8,12 @@ public class Health : NetworkBehaviour
 
 	public const int maxHealth = 100;
 	public bool destroyOnDeath;
+    public Image damageImage;
+    public float flashSpeed = 5f;
+    public Color flashColor = new Color(1f, 0f, 0f, 0.1f);
+
 	private NetworkStartPosition[] spawnPoints;
+    private bool damaged;
 
 	[SyncVar(hook = "OnChangeHealth")]
 	public int currentHealth = maxHealth;
@@ -17,8 +23,26 @@ public class Health : NetworkBehaviour
 		if (isLocalPlayer)
 		{
 			spawnPoints = FindObjectsOfType<NetworkStartPosition>();
+            damaged = false;
+            damageImage = transform.parent.GetChild(0).GetChild(0).GetComponent<Image>();
 		}
 	}
+
+    void Update ()
+    {
+        if (damageImage)
+        {
+            if (damaged)
+            {
+                damageImage.color = flashColor;
+            }
+            else
+            {
+                damageImage.color = Color.Lerp(damageImage.color, Color.clear, flashSpeed * Time.deltaTime);
+            }
+        }
+        damaged = false;
+    }
 
 	public void TakeDamage(int amount)
 	{
@@ -26,7 +50,10 @@ public class Health : NetworkBehaviour
 		{
 			return;
 		}
-		currentHealth -= amount;
+
+        currentHealth -= amount;
+
+        damaged = true;
 
 		if (currentHealth <= 0)
 		{
@@ -34,7 +61,8 @@ public class Health : NetworkBehaviour
 				Destroy (gameObject);
 			} else {
 				currentHealth = maxHealth;
-				RpcRespawn ();
+                if(GetComponent<PlayerController>())
+				    RpcRespawn ();
 			}
 		}
 	}

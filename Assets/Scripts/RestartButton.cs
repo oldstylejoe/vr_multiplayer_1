@@ -15,6 +15,10 @@ public class RestartButton : NetworkBehaviour, ITouchable
     public EnemySpawner enemyspawner;
     // Get our Waiting Wall Object
     public GameObject WaitingWall;
+    // Get our Material for color
+    public Material buttonMat;
+    public Color NonUseColor = new Color(1f, 0f, 0f);
+    public Color UseColor = new Color(0f, 1f, 0f);
 
     // DataLogger Script from Datalogger object
     private DataLogger datalogger = null;
@@ -42,7 +46,6 @@ public class RestartButton : NetworkBehaviour, ITouchable
         if (WaitingWall)
         {
             WaitPos = WaitingWall.transform.position;
-            Debug.Log(WaitPos);
             GoPos = WaitPos + new Vector3(0, -4, 0);
             WaitingWall.transform.position = GoPos;
         }
@@ -60,13 +63,29 @@ public class RestartButton : NetworkBehaviour, ITouchable
         if (datalogger)
             datalogger.RecordButtonPress();
 
-        // Raise WaitingWall for RespawnTimer seconds
-        if (WaitingWall)
-        {
-            WaitingWall.transform.position = WaitPos;
-        }
-
         StartCoroutine(WaitforReset(RespawnTimer));
+    }
+
+    [ClientRpc]
+    private void RpcWaiting(bool waiting)
+    {
+        if (waiting)
+        {
+            // Raise WaitingWall for RespawnTimer seconds
+            if (WaitingWall)
+            {
+                WaitingWall.transform.position = WaitPos;
+            }
+            buttonMat.color = UseColor;
+        }
+        else
+        {
+            if (WaitingWall)
+            {
+                WaitingWall.transform.position = GoPos;
+            }
+            buttonMat.color = NonUseColor;
+        }
     }
 
     private IEnumerator WaitforReset(float waitTime)
@@ -75,17 +94,14 @@ public class RestartButton : NetworkBehaviour, ITouchable
             yield break;
 
         Respawning = true;
+        RpcWaiting(true);
 
         yield return new WaitForSeconds(waitTime);
 
         // Button has been used, Spawn enemies
         enemyspawner.SpawnEnemies();
 
-        if (WaitingWall)
-        {
-            WaitingWall.transform.position = GoPos;
-        }
-
+        RpcWaiting(false);
         Respawning = false;
     }
 

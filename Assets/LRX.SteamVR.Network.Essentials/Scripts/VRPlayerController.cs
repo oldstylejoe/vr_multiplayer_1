@@ -8,7 +8,6 @@ public class VRPlayerController : NetworkBehaviour
     public GameObject vrCameraRig;
 	public GameObject leftHandPrefab;
     public GameObject rightHandPrefab;
-    public GameObject HUD;
 
     private DataLogger datalogger;
     private GameObject vrCameraRigInstance;

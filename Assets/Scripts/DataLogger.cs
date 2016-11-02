@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,20 +22,33 @@ public class DataLogger : NetworkBehaviour {
     public Transform Player;
     public Transform RightHand;
     public Transform LeftHand;
+    public bool WriteToFile = true;
+    public Text WaitingWallText;
+
     private List<Transform> Enemies;
     private List<Transform> Bullets;
+    [SyncVar]
+    private int trialCount = 0;
+    [SyncVar]
+    private int winCount = 0;
+    [SyncVar]
+    private int lossCount = 0;
+    private bool trialLost = false;
+    private static int times = 0;
 
     void Start ()
     {
         Enemies = new List<Transform>();
         Bullets = new List<Transform>();
     }
-	
-	// Update is called once per frame
+
 	void FixedUpdate () {
-        RecordPlayer();
-        RecordEnemies();
-        RecordBullets();
+        if (WriteToFile)
+        {
+            RecordPlayer();
+            RecordEnemies();
+            RecordBullets();
+        }
 	}
 
     private void RecordPlayer ()
@@ -49,7 +63,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Player " + Player.transform.position + " " + Player.transform.rotation);
             Vector3 PlayerPos = Player.position;
             Quaternion PlayerRot = Player.rotation;
-            Clock.markEvent("Player " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
+            LogHandler.markEvent("Player " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
         }
 
         if (RightHand)
@@ -58,7 +72,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
             Vector3 RightHandPos = RightHand.position;
             Quaternion RightHandRot = RightHand.rotation;
-            Clock.markEvent("RightHand " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
+            LogHandler.markEvent("RightHand " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
         }
 
         if (LeftHand)
@@ -67,7 +81,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
             Vector3 LeftHandPos = LeftHand.position;
             Quaternion LeftHandRot = LeftHand.rotation;
-            Clock.markEvent("LeftHand " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
+            LogHandler.markEvent("LeftHand " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
         }
     }
 
@@ -83,7 +97,7 @@ public class DataLogger : NetworkBehaviour {
                     //Debug.Log("Enemy " + Enemy.transform.position + " " + Enemy.transform.rotation);
                     Vector3 EnemyPos = Enemy.position;
                     Quaternion EnemyRot = Enemy.rotation;
-                    Clock.markEvent("Enemy " + EnemyPos.x + " " + EnemyPos.y + " " + EnemyPos.z + " " + EnemyRot.x + " " + EnemyRot.y + " " + EnemyRot.z);
+                    LogHandler.markEvent("Enemy " + EnemyPos.x + " " + EnemyPos.y + " " + EnemyPos.z + " " + EnemyRot.x + " " + EnemyRot.y + " " + EnemyRot.z);
                 }
             }
         }
@@ -101,7 +115,7 @@ public class DataLogger : NetworkBehaviour {
                     //Debug.Log("Bullet " + Bullet.transform.position + " " + Bullet.transform.rotation);
                     Vector3 BulletPos = Bullet.position;
                     Quaternion BulletRot = Bullet.rotation;
-                    Clock.markEvent("Bullet " + BulletPos.x + " " + BulletPos.y + " " + BulletPos.z + " " + BulletRot.x + " " + BulletRot.y + " " + BulletRot.z);
+                    LogHandler.markEvent("Bullet " + BulletPos.x + " " + BulletPos.y + " " + BulletPos.z + " " + BulletRot.x + " " + BulletRot.y + " " + BulletRot.z);
                 }
             }
         }
@@ -109,19 +123,41 @@ public class DataLogger : NetworkBehaviour {
 
     public void RecordButtonPress()
     {
-        Clock.markEvent("ButtonPressed");
+        if (trialLost)
+        {
+            lossCount++;
+            trialLost = false;
+        }
+        else if (trialCount != 0)
+            winCount++;
+
+        trialCount++;
+
+        if (WriteToFile)
+            LogHandler.markEvent(System.Environment.NewLine + "Trial " + trialCount);
+
+        if (WaitingWallText)
+        {
+            RpcChangeWallText();
+        }
     }
 
     public void RecordHit (GameObject hit)
     {
         string Victim = "";
-        if (hit == Player)
+        if (hit.tag == "Player")
+        {
             Victim = "Player, ";
+            trialLost = true;
+        }
         else if (hit.tag == "Enemy")
             Victim = "Enemy, ";
-        
+
         if (Victim != "")
-            Clock.markEvent(Victim + "Hit");
+        {
+            if (WriteToFile)
+                LogHandler.markEvent(Victim + "Hit");
+        }
     }
 
     // List access from other functions, such as BulletCollide and EnemyTurret
@@ -148,4 +184,17 @@ public class DataLogger : NetworkBehaviour {
         Bullets.Remove(deadBullet);
     }
     #endregion
+
+    [ClientRpc]
+    private void RpcChangeWallText()
+    {
+        times++;
+
+        WaitingWallText.text = "Please Wait for Trial " + trialCount + " to start" + System.Environment.NewLine + System.Environment.NewLine +
+                               "Current Stats:" + System.Environment.NewLine +
+                               "Wins:    " + winCount + System.Environment.NewLine +
+                               "Losses:  " + lossCount + System.Environment.NewLine;
+
+        Debug.Log("Called: " + times + " times");
+    }
 }

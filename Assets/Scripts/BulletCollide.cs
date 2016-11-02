@@ -60,8 +60,7 @@ public class BulletCollide : NetworkBehaviour
         else if (collision.gameObject.tag == "Player")
         {
             // Game Over Routine 
-            // Need to be defined.
-            Debug.Log("Game Over!!");
+
         }
 
         // Currently the target dies upon getting hit, so using the health code has been commented out
