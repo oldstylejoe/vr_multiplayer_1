@@ -46,6 +46,7 @@ public class PlayerController : NetworkBehaviour
             datalogger.Player = gameObject.transform;
             datalogger.LeftHand = null;
             datalogger.RightHand = null;
+            datalogger.PlayerName = name;
         }
     }
 

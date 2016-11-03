@@ -41,12 +41,12 @@ public class BulletCollide : NetworkBehaviour
         if (!isServer)
             return;
 
-        if (collision.gameObject.tag == "Weapon")
+        if (collision.gameObject.CompareTag("Weapon"))
             return;
 
         // Destroy object on collision
         NetworkServer.Destroy(gameObject);
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             EventManager.TriggerEvent("EnemyDec");
             if (datalogger)
@@ -57,14 +57,12 @@ public class BulletCollide : NetworkBehaviour
             // Used to be handled with Event Manager
             // EventManager.TriggerEvent("Destroy");
         }
-        else if (collision.gameObject.tag == "Player")
+        /*
+        else if (collision.gameObject.CompareTag("Player"))
         {
-            // Game Over Routine 
-
+            // Game Over Routine???
         }
-
-        // Currently the target dies upon getting hit, so using the health code has been commented out
-        // and is here as a placeholder in case this is used later
+        */
 
         //If target has health, take damage
         var health = collision.gameObject.GetComponent<Health>();
@@ -75,7 +73,7 @@ public class BulletCollide : NetworkBehaviour
 
         if (datalogger)
         {
-            datalogger.RecordHit(collision.gameObject);
+            datalogger.RecordHit(collision.transform);
             datalogger.RemoveBullet(this.transform);
         }
     }

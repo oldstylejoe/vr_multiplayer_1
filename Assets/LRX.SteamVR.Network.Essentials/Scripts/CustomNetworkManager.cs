@@ -24,7 +24,8 @@ public class CustomNetworkManager : NetworkManager {
 		} else {
 			newPlayer = (GameObject)Instantiate (this.playerPrefab, spawnPoint.position, spawnPoint.rotation);
 		}
-		NetworkServer.AddPlayerForConnection (conn, newPlayer, playerControllerId);
+        NetworkServer.AddPlayerForConnection (conn, newPlayer, playerControllerId);
+        newPlayer.name = "Player" + (playerCount + 1);
 		playerCount++;
 	}
 

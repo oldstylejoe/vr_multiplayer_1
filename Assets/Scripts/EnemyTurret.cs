@@ -104,7 +104,7 @@ public class EnemyTurret : NetworkBehaviour
 
         if (!target)
         {
-            if (other.gameObject.tag == "Player")
+            if (other.gameObject.CompareTag("Player"))
                 target = other.gameObject;
         }
     }
@@ -114,7 +114,7 @@ public class EnemyTurret : NetworkBehaviour
     {
         if (!target)
         {
-            if (other.gameObject.tag == "Player")
+            if (other.gameObject.CompareTag("Player"))
                 target = other.gameObject;
         }
     }

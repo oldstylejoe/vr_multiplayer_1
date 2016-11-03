@@ -38,9 +38,8 @@ public class VRPlayerController : NetworkBehaviour
         // Note: Modification was made to take out the HP label and add in a new damage image canvas.
         //       This means the object has a different array of children. The original prefab will no
         //       longer work with this code. Only the new modified one will.
-        transform.GetChild(0).parent = Camera.main.transform;
         transform.GetChild(0).GetComponent<Canvas>().worldCamera = Camera.main;
-        transform.GetChild(0).GetComponent<Canvas>().planeDistance = .4f;
+        transform.GetChild(0).GetComponent<Canvas>().planeDistance = .1f;
         GetComponent<Health>().damageImage = transform.GetChild(0).GetChild(0).GetComponent<Image>();
 
         // Check for DataLogger Object
@@ -50,6 +49,7 @@ public class VRPlayerController : NetworkBehaviour
         {
             datalogger = dataloggerTest.GetComponent<DataLogger>();
             datalogger.Player = head.transform;
+            datalogger.PlayerName = name;
         }
 
         TryDetectControllers ();

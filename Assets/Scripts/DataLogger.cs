@@ -25,17 +25,20 @@ public class DataLogger : NetworkBehaviour {
     // All commented out Debug.Log calls are to test outputs
 
     // Player Information (RightHand and LeftHand only for VR)
+    public string PlayerName;
     public Transform Player;
     public Transform RightHand;
     public Transform LeftHand;
     // Boolean for turning on and off file I/O
-    public bool WriteToFile = true;
+    public const bool WriteToFile = true;
     // Unity Text UI for the waiting wall
     public Text WaitingWallText;
 
     // List of Enemies and Bullets in Scene for logging
     private List<Transform> Enemies = new List<Transform>();
+    private static int enemyCounter = 0;
     private List<Transform> Bullets = new List<Transform>();
+    private static int bulletCounter = 0;
     // Counters for Trial Number, number of wins, and number of losses
     private int trialCount = 0;
     private int winCount = 0;
@@ -69,7 +72,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Player " + Player.transform.position + " " + Player.transform.rotation);
             Vector3 PlayerPos = Player.position;
             Quaternion PlayerRot = Player.rotation;
-            LogHandler.markEvent("Player " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
+            LogHandler.markEvent(PlayerName + " " + trialCount + " " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
         }
 
         if (RightHand)
@@ -78,7 +81,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
             Vector3 RightHandPos = RightHand.position;
             Quaternion RightHandRot = RightHand.rotation;
-            LogHandler.markEvent("RightHand " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
+            LogHandler.markEvent(PlayerName + "_RightHand " + trialCount + " " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
         }
 
         if (LeftHand)
@@ -87,7 +90,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
             Vector3 LeftHandPos = LeftHand.position;
             Quaternion LeftHandRot = LeftHand.rotation;
-            LogHandler.markEvent("LeftHand " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
+            LogHandler.markEvent(PlayerName + "_LeftHand " + trialCount + " " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
         }
     }
 
@@ -103,7 +106,7 @@ public class DataLogger : NetworkBehaviour {
                     //Debug.Log("Enemy " + Enemy.transform.position + " " + Enemy.transform.rotation);
                     Vector3 EnemyPos = Enemy.position;
                     Quaternion EnemyRot = Enemy.rotation;
-                    LogHandler.markEvent("Enemy " + EnemyPos.x + " " + EnemyPos.y + " " + EnemyPos.z + " " + EnemyRot.x + " " + EnemyRot.y + " " + EnemyRot.z);
+                    LogHandler.markEvent(Enemy.name + " " + trialCount + " " + EnemyPos.x + " " + EnemyPos.y + " " + EnemyPos.z + " " + EnemyRot.x + " " + EnemyRot.y + " " + EnemyRot.z);
                 }
             }
         }
@@ -121,7 +124,7 @@ public class DataLogger : NetworkBehaviour {
                     //Debug.Log("Bullet " + Bullet.transform.position + " " + Bullet.transform.rotation);
                     Vector3 BulletPos = Bullet.position;
                     Quaternion BulletRot = Bullet.rotation;
-                    LogHandler.markEvent("Bullet " + BulletPos.x + " " + BulletPos.y + " " + BulletPos.z + " " + BulletRot.x + " " + BulletRot.y + " " + BulletRot.z);
+                    LogHandler.markEvent(Bullet.name + " " + trialCount + " " + BulletPos.x + " " + BulletPos.y + " " + BulletPos.z + " " + BulletRot.x + " " + BulletRot.y + " " + BulletRot.z);
                 }
             }
         }
@@ -130,9 +133,6 @@ public class DataLogger : NetworkBehaviour {
     // Every Button Press is recorded and each section of data is segmented accordingly.
     public void RecordButtonPress()
     {
-        if (WriteToFile)
-            LogHandler.markEvent(System.Environment.NewLine + "Trial " + trialCount + " ");
-
         if (WaitingWallText)
         {
             RpcChangeWallText();
@@ -141,29 +141,24 @@ public class DataLogger : NetworkBehaviour {
 
     // Record Player and Enemy hit information
     // Also sets trialLost to be true when Player is hit to denote a loss
-    public void RecordHit (GameObject hit)
+    public void RecordHit (Transform hit)
     {
-        string Victim = "";
-        if (hit.tag == "Player")
-        {
-            Victim = "Player, ";
-            trialLost = true;
-        }
-        else if (hit.tag == "Enemy")
-            Victim = "Enemy, ";
+        Vector3 hitPos = hit.position;
+        Quaternion hitRot = hit.rotation;
+        if (WriteToFile)
+            LogHandler.markEvent(hit.name + "Hit " + trialCount + " " + hitPos.x + " " + hitPos.y + " " + hitPos.z + " " + hitRot.x + " " + hitRot.y + " " + hitRot.z);
 
-        if (Victim != "")
-        {
-            if (WriteToFile)
-                LogHandler.markEvent(Victim + "Hit");
-        }
+        if(hit.CompareTag("Player"))
+            trialLost = true;
     }
 
     // List access from other functions, such as BulletCollide and EnemyTurret
     #region Enemy List Access
     public void AddEnemy(Transform newEnemy)
     {
+        newEnemy.name = "Enemy" + enemyCounter;
         Enemies.Add(newEnemy);
+        enemyCounter++;
     }
 
     public void RemoveEnemy(Transform deadEnemy)
@@ -175,7 +170,9 @@ public class DataLogger : NetworkBehaviour {
     #region Bullet List Access
     public void AddBullet(Transform newBullet)
     {
+        newBullet.name = "Bullet" + bulletCounter;
         Bullets.Add(newBullet);
+        bulletCounter++;
     }
 
     public void RemoveBullet(Transform deadBullet)
@@ -190,13 +187,16 @@ public class DataLogger : NetworkBehaviour {
     [ClientRpc]
     private void RpcChangeWallText()
     {
-        if (trialLost)
+        if (trialCount != 0)
         {
-            lossCount++;
-            trialLost = false;
+            if (trialLost)
+            {
+                lossCount++;
+                trialLost = false;
+            }
+            else
+                winCount++;
         }
-        else if (trialCount != 0)
-            winCount++;
 
         trialCount++;
 
