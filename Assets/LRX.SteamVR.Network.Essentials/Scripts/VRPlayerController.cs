@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Networking;
 using System;
@@ -33,6 +34,14 @@ public class VRPlayerController : NetworkBehaviour
 		GameObject head = vrCameraRigInstance.GetComponentInChildren<SteamVR_Camera> ().gameObject;
 		transform.parent = head.transform;
         transform.localPosition = new Vector3(0f, -0.03f, -0.06f);
+
+        // Note: Modification was made to take out the HP label and add in a new damage image canvas.
+        //       This means the object has a different array of children. The original prefab will no
+        //       longer work with this code. Only the new modified one will.
+        transform.GetChild(0).parent = Camera.main.transform;
+        transform.GetChild(0).GetComponent<Canvas>().worldCamera = Camera.main;
+        transform.GetChild(0).GetComponent<Canvas>().planeDistance = .4f;
+        GetComponent<Health>().damageImage = transform.GetChild(0).GetChild(0).GetComponent<Image>();
 
         // Check for DataLogger Object
         GameObject dataloggerTest = GameObject.FindGameObjectWithTag("DataLogger");

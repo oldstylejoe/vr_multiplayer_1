@@ -24,7 +24,6 @@ public class Health : NetworkBehaviour
 		{
 			spawnPoints = FindObjectsOfType<NetworkStartPosition>();
             damaged = false;
-            damageImage = transform.parent.GetChild(0).GetChild(0).GetComponent<Image>();
 		}
 	}
 
@@ -35,13 +34,13 @@ public class Health : NetworkBehaviour
             if (damaged)
             {
                 damageImage.color = flashColor;
+                damaged = false;
             }
             else
             {
                 damageImage.color = Color.Lerp(damageImage.color, Color.clear, flashSpeed * Time.deltaTime);
             }
         }
-        damaged = false;
     }
 
 	public void TakeDamage(int amount)
@@ -53,24 +52,25 @@ public class Health : NetworkBehaviour
 
         currentHealth -= amount;
 
-        damaged = true;
-
 		if (currentHealth <= 0)
 		{
 			if (destroyOnDeath) {
 				Destroy (gameObject);
 			} else {
 				currentHealth = maxHealth;
-                if(GetComponent<PlayerController>())
-				    RpcRespawn ();
+                /* Currently unnecessary for application. Uncomment to reuse.
+                if (GetComponent<PlayerController>())
+                {
+                    RpcRespawn();
+                }
+                */
 			}
 		}
 	}
 
 	void OnChangeHealth (int currentHealth)
 	{
-        if(GetComponentInChildren<TextMesh>())
-		    GetComponentInChildren<TextMesh> ().text = currentHealth.ToString();
+        damaged = true;
 	}
 
 	[ClientRpc]
@@ -88,11 +88,13 @@ public class Health : NetworkBehaviour
 
 			// Set the player’s position to the chosen spawn point
 			//transform.p
-			Transform ancestor = GetAncestor(transform);
-			ancestor.position = spawnPoint;
-		}
+			//Transform ancestor = GetAncestor(transform);
+			transform.position = spawnPoint;
+            transform.position = new Vector3(transform.position.x + -1f, transform.position.y + .8f, transform.position.z);
+        }
 	}
 
+    /*
 	Transform GetAncestor(Transform child)
 	{
 		Transform currentObject = child;
@@ -101,4 +103,5 @@ public class Health : NetworkBehaviour
 		}
 		return currentObject;
 	}
+    */
 }

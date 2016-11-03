@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿// Necessary Dependencies
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
@@ -6,8 +7,12 @@ using System.Collections.Generic;
 
 public class DataLogger : NetworkBehaviour {
 
+    // Mohammad Alam
     // This is the DataLogger code
-    // Purpose: Log the data to a file using Clocks file for format
+    // Purpose: Log the data to a file using Clocks file for format. 
+    //  This works locally for each player.
+    //  This also puts some information on the waiting wall.
+    //
     // Data logged for VR and nonVR:
     //              Enemy Transform and Rotation
     //              Bullet Transform and Rotation
@@ -19,38 +24,39 @@ public class DataLogger : NetworkBehaviour {
     //              Player object
     // All commented out Debug.Log calls are to test outputs
 
+    // Player Information (RightHand and LeftHand only for VR)
     public Transform Player;
     public Transform RightHand;
     public Transform LeftHand;
+    // Boolean for turning on and off file I/O
     public bool WriteToFile = true;
+    // Unity Text UI for the waiting wall
     public Text WaitingWallText;
 
-    private List<Transform> Enemies;
-    private List<Transform> Bullets;
-    [SyncVar]
+    // List of Enemies and Bullets in Scene for logging
+    private List<Transform> Enemies = new List<Transform>();
+    private List<Transform> Bullets = new List<Transform>();
+    // Counters for Trial Number, number of wins, and number of losses
     private int trialCount = 0;
-    [SyncVar]
     private int winCount = 0;
-    [SyncVar]
     private int lossCount = 0;
+    // Boolean for when the trial is lost. This happens when either player is shot.
+    // The SyncVar attribute allows for either player to be shot and have it be recorded for both.
+    [SyncVar]
     private bool trialLost = false;
-    private static int times = 0;
-
-    void Start ()
-    {
-        Enemies = new List<Transform>();
-        Bullets = new List<Transform>();
-    }
 
 	void FixedUpdate () {
+        // Write to file every FixedUpdate
         if (WriteToFile)
         {
             RecordPlayer();
             RecordEnemies();
             RecordBullets();
         }
-	}
+    }
 
+    // For recording player information. The public Player GameObject Variables are filled in using
+    // external scripts: PlayerController and VrPlayerController
     private void RecordPlayer ()
     {
         if (!Player)
@@ -59,7 +65,7 @@ public class DataLogger : NetworkBehaviour {
         }
         else
         {
-            //Record Positions
+            //Record Player Body Positions and Rotations
             //Debug.Log("Player " + Player.transform.position + " " + Player.transform.rotation);
             Vector3 PlayerPos = Player.position;
             Quaternion PlayerRot = Player.rotation;
@@ -68,7 +74,7 @@ public class DataLogger : NetworkBehaviour {
 
         if (RightHand)
         {
-            //Record Positions
+            //Record Player Right Hand Positions and Rotations
             //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
             Vector3 RightHandPos = RightHand.position;
             Quaternion RightHandRot = RightHand.rotation;
@@ -77,7 +83,7 @@ public class DataLogger : NetworkBehaviour {
 
         if (LeftHand)
         {
-            //Record Positions
+            //Record Player Left Hand Positions and Rotations
             //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
             Vector3 LeftHandPos = LeftHand.position;
             Quaternion LeftHandRot = LeftHand.rotation;
@@ -85,13 +91,13 @@ public class DataLogger : NetworkBehaviour {
         }
     }
 
+    // Record Positions and Rotations of all the enemies in the Enemies List
     private void RecordEnemies()
     {
         if (Enemies.Count != 0)
         {
             foreach(Transform Enemy in Enemies)
             {
-                //Record Positions
                 if (Enemy)
                 {
                     //Debug.Log("Enemy " + Enemy.transform.position + " " + Enemy.transform.rotation);
@@ -103,13 +109,13 @@ public class DataLogger : NetworkBehaviour {
         }
     }
 
+    // Record Positions and Rotations of all the bullets in the Bullets List
     public void RecordBullets()
     {
         if (Bullets.Count != 0)
         {
             foreach(Transform Bullet in Bullets)
             {
-                //Record Positions
                 if (Bullet)
                 {
                     //Debug.Log("Bullet " + Bullet.transform.position + " " + Bullet.transform.rotation);
@@ -121,20 +127,11 @@ public class DataLogger : NetworkBehaviour {
         }
     }
 
+    // Every Button Press is recorded and each section of data is segmented accordingly.
     public void RecordButtonPress()
     {
-        if (trialLost)
-        {
-            lossCount++;
-            trialLost = false;
-        }
-        else if (trialCount != 0)
-            winCount++;
-
-        trialCount++;
-
         if (WriteToFile)
-            LogHandler.markEvent(System.Environment.NewLine + "Trial " + trialCount);
+            LogHandler.markEvent(System.Environment.NewLine + "Trial " + trialCount + " ");
 
         if (WaitingWallText)
         {
@@ -142,6 +139,8 @@ public class DataLogger : NetworkBehaviour {
         }
     }
 
+    // Record Player and Enemy hit information
+    // Also sets trialLost to be true when Player is hit to denote a loss
     public void RecordHit (GameObject hit)
     {
         string Victim = "";
@@ -185,16 +184,25 @@ public class DataLogger : NetworkBehaviour {
     }
     #endregion
 
+    // Change the WaitignWallText
+    // This RpcCommand occurs on the server and affects all clients, so that everyone
+    // has the correct information.
     [ClientRpc]
     private void RpcChangeWallText()
     {
-        times++;
+        if (trialLost)
+        {
+            lossCount++;
+            trialLost = false;
+        }
+        else if (trialCount != 0)
+            winCount++;
+
+        trialCount++;
 
         WaitingWallText.text = "Please Wait for Trial " + trialCount + " to start" + System.Environment.NewLine + System.Environment.NewLine +
                                "Current Stats:" + System.Environment.NewLine +
                                "Wins:    " + winCount + System.Environment.NewLine +
                                "Losses:  " + lossCount + System.Environment.NewLine;
-
-        Debug.Log("Called: " + times + " times");
     }
 }

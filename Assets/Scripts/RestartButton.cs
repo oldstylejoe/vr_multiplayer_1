@@ -49,6 +49,8 @@ public class RestartButton : NetworkBehaviour, ITouchable
             GoPos = WaitPos + new Vector3(0, -4, 0);
             WaitingWall.transform.position = GoPos;
         }
+
+        buttonMat.color = NonUseColor;
     }
 
     // This restarts the task.
@@ -56,7 +58,7 @@ public class RestartButton : NetworkBehaviour, ITouchable
     private void ResetScene()
     {
         // Check if all enemies have been taken out
-        if (enemyspawner.EnemyCount != 0)
+        if (enemyspawner.EnemyCount != 0  || Respawning)
             return;
 
         // Record press

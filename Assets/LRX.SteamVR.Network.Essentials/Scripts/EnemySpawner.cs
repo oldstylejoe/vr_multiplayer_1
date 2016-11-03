@@ -38,6 +38,9 @@ public class EnemySpawner : NetworkBehaviour {
 
     public void SpawnEnemies ()
     {
+        if (!isServer)
+            return;
+
         // Do not spawn enemies if there are still enemies in the scene.
         if (NumEnemiesSpawned != 0)
             return;
