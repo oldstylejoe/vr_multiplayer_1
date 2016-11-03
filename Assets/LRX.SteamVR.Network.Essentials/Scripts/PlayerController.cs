@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 
 public class PlayerController : NetworkBehaviour
@@ -10,7 +11,8 @@ public class PlayerController : NetworkBehaviour
 	public Transform bulletSpawn;
     public float speed;
 
-
+    private Vector3 PosOffset;
+    
     private DataLogger datalogger;
     public override void OnStartLocalPlayer()
 	{
@@ -23,7 +25,14 @@ public class PlayerController : NetworkBehaviour
 		Camera.main.transform.localPosition = new Vector3 (0, .5f, 0);
 		Camera.main.transform.localRotation = Quaternion.Euler (6.31f, 0, 0);
 
-        transform.GetChild(3).parent = Camera.main.transform;
+        PosOffset = Camera.main.transform.position - transform.GetChild(2).position;
+
+        // Note: Modification was made to take out the HP label and add in a new damage image canvas.
+        //       This means the object has a different array of children. The original prefab will no
+        //       longer work with this code. Only the new modified one will.
+        transform.GetChild(3).GetComponent<Canvas>().worldCamera = Camera.main;
+        transform.GetChild(3).GetComponent<Canvas>().planeDistance = .4f;
+        GetComponent<Health>().damageImage = transform.GetChild(3).GetChild(0).GetComponent<Image>();
 
         mouseLook = new MouseLook ();
 		mouseLook.Init (transform, Camera.main.transform);
@@ -57,11 +66,13 @@ public class PlayerController : NetworkBehaviour
 
         mouseLook.LookRotation (transform, Camera.main.transform);
 
+
+
         // For flight.
         //transform.rotation = Camera.main.transform.rotation;
 
-		// common input here
-		if (Input.GetKeyDown(KeyCode.Space))
+        // common input here
+        if (Input.GetKeyDown(KeyCode.Space))
 		{
 			CmdFire();
 		}
@@ -72,6 +83,9 @@ public class PlayerController : NetworkBehaviour
 	[Command]
 	protected void CmdFire()
 	{
+        // There are issues with the client player as to where the bullet is spawning. 
+        // bulletSpawn may not be read correctly? bulletSpawn may not be sent through the network correctly?
+        // Try reworking the original prefab
 		// Create the Bullet from the Bullet Prefab
 		var bullet = (GameObject)Instantiate(
 			bulletPrefab,

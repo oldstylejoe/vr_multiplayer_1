@@ -74,7 +74,10 @@ public class BulletCollide : NetworkBehaviour
         }
 
         if (datalogger)
+        {
             datalogger.RecordHit(collision.gameObject);
+            datalogger.RemoveBullet(this.transform);
+        }
     }
 
     /* Original Code
