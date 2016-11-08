@@ -1,11 +1,19 @@
-﻿using UnityEngine;
+﻿/* Original Code by Joe Snider and some borrowed code from Bullet script from SteamVR Network Essentials
+ * Purpose: Have Bullet cause damage or destroy on collisions and record its data
+ * 
+ * Modifications made by Mohammad Alam
+ *  - Changed original method to utilize some new scripts
+ *      - Uses EnemySpawner EventSystem to Decrement Enemy Count
+ *      - Uses DataLogger to watch bullets and collisions
+ *      - Calls Health Script on Player
+ */
+
+using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 
 public class BulletCollide : NetworkBehaviour
 {
-    // Uses some code from the Bullet script from SteamVR Network Essentials
-
     // Lifetime of the bullet when fired
     public float lifeTime = 10f;
 
@@ -28,6 +36,8 @@ public class BulletCollide : NetworkBehaviour
         if(datalogger)
             datalogger.AddBullet(this.transform);
     }
+   
+    // Destroy after time lifetime
     void DestroyMe()
     {
         NetworkServer.Destroy(gameObject);
@@ -53,9 +63,6 @@ public class BulletCollide : NetworkBehaviour
                 datalogger.RemoveEnemy(collision.transform);
             Destroy(collision.gameObject);
             //add an explosion or something
-            //destroy the projectile that just caused the trigger collision
-            // Used to be handled with Event Manager
-            // EventManager.TriggerEvent("Destroy");
         }
         /*
         else if (collision.gameObject.CompareTag("Player"))
@@ -71,31 +78,11 @@ public class BulletCollide : NetworkBehaviour
             health.TakeDamage(10);
         }
 
+        // Record Data
         if (datalogger)
         {
             datalogger.RecordHit(collision.transform);
             datalogger.RemoveBullet(this.transform);
         }
     }
-
-    /* Original Code
-     * Moved up into OnCollisionEnter
-    void OnTriggerEnter(Collider col)
-    {
-        //all projectile colliding game objects should be tagged "Enemy" or whatever in inspector but that tag must be reflected in the below if conditional
-        //Debug.Log("gh3 " + col.gameObject.tag);
-        if (col.gameObject.tag == "Enemy")
-        {
-            Destroy(col.gameObject);
-            //add an explosion or something
-            //destroy the projectile that just caused the trigger collision
-            EventManager.TriggerEvent("Destroy");
-        }
-
-        if(col.gameObject.tag != "controller")
-        {
-            Destroy(gameObject, 1.0f);
-        }
-    }
-    */
 }

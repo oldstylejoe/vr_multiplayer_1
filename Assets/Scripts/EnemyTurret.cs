@@ -1,16 +1,24 @@
-﻿using UnityEngine;
+﻿/* Code by Mohammad Alam
+ * Purpose: Enemy AI code to make the Enemy act like a turret.
+ *      Currently, the enemy is coded to turn its whole body 
+ *      accordingly when it sees the target (Player) and has 
+ *      a chance to fire every 2 seconds. 
+ *      
+ *      This will only target the player closest to the Enemy.
+ *      
+ *      The gun will randomly change rotation when firing.
+ * 
+ * Interacts with the DataLogger to start logging new enemy transform.
+ * 
+ */
+
+// Gun Shot Sound Courtesy of Freesound.org: http://freesound.org/people/Brokenphono/sounds/344143/
+
+using UnityEngine;
 using UnityEngine.Networking;
 
 public class EnemyTurret : NetworkBehaviour
 {
-    // Enemy AI code to make the Enemy act like a turret.
-    /*
-     * 
-     * Currently, the enemy is coded to turn its whole body accordingly when it sees
-     * the target (Player) and has a chance to fire every 2 seconds.
-     * The gun will randomly change rotation when firing.
-     * 
-     */
     public float rotationSpeed = 20f;
     // Necessary variables for shooting
     public GameObject bulletPrefab;
@@ -30,6 +38,10 @@ public class EnemyTurret : NetworkBehaviour
 
     // Necessary to add to enemy count when spawned
     public EnemySpawner enemyspawner;
+
+    // For Sound
+    public AudioClip gunShotSound;
+    public float soundVol = 0.01f;
 
     void Start()
     {
@@ -96,16 +108,21 @@ public class EnemyTurret : NetworkBehaviour
         }
     }
 
-    // 10% chance to see player when they enter field of view (trigger)
+    // Sees player when they enter field of view (trigger)
     void OnTriggerEnter (Collider other)
     {
-        if (Random.Range(0, 10) != 1)
-            return;
-
         if (!target)
         {
             if (other.gameObject.CompareTag("Player"))
                 target = other.gameObject;
+        }
+        else
+        {
+            if (other.gameObject.CompareTag("Player"))
+            {
+                if ((transform.position - other.transform.position).magnitude < (transform.position - target.transform.position).magnitude)
+                    target = other.gameObject;
+            }
         }
     }
 
@@ -116,6 +133,14 @@ public class EnemyTurret : NetworkBehaviour
         {
             if (other.gameObject.CompareTag("Player"))
                 target = other.gameObject;
+        }
+        else
+        {
+            if (other.gameObject.CompareTag("Player"))
+            {
+                if ((transform.position - other.transform.position).magnitude < (transform.position - target.transform.position).magnitude)
+                    target = other.gameObject;
+            }
         }
     }
 
@@ -143,6 +168,10 @@ public class EnemyTurret : NetworkBehaviour
 
         // Add velocity to the bullet
         bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * bulletSpeed;
+
+        // Play Sound
+        if (gunShotSound)
+            AudioSource.PlayClipAtPoint(gunShotSound, bulletSpawn.position, soundVol);
 
         // Spawn the bullet on the Clients
         NetworkServer.Spawn(bullet);

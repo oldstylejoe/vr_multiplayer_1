@@ -1,4 +1,23 @@
-﻿// Necessary Dependencies
+﻿/* Code by Mohammad Alam
+ * Purpose: Log the data to a file using Clocks file for format. 
+ *   This works locally for each player.
+ *   This also puts some information on the waiting wall.
+ * 
+ * Data Logged for all cases:
+ *      - Enemy Transform and Rotation
+ *      - Bullet Transform and Rotation
+ *      - Game Reset (Button Pressed)
+ *      - Object hit
+ *      
+ * Data Logged for VR:
+ *      - Player body and hands Transform and Rotation
+ * Data Logged for VR:
+ *      - Player object
+ *      
+ * All commented out Debug.Log calls are to test outputs
+ */
+
+// Necessary Dependencies
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
@@ -7,33 +26,17 @@ using System.Collections.Generic;
 
 public class DataLogger : NetworkBehaviour {
 
-    // Mohammad Alam
-    // This is the DataLogger code
-    // Purpose: Log the data to a file using Clocks file for format. 
-    //  This works locally for each player.
-    //  This also puts some information on the waiting wall.
-    //
-    // Data logged for VR and nonVR:
-    //              Enemy Transform and Rotation
-    //              Bullet Transform and Rotation
-    //              Game Reset (Button Pressed)
-    //              Object hit
-    // Data logged for VR:
-    //              Player body and hands Transform and Rotation
-    // Data logged for nonVR: 
-    //              Player object
-    // All commented out Debug.Log calls are to test outputs
-
     // Player Information (RightHand and LeftHand only for VR)
-    public string PlayerName;
     public Transform Player;
     public Transform RightHand;
     public Transform LeftHand;
-    // Boolean for turning on and off file I/O
-    public const bool WriteToFile = true;
     // Unity Text UI for the waiting wall
     public Text WaitingWallText;
 
+    // Boolean for turning on and off file I/O
+    private const bool WriteToFile = true;
+    // Boolean for adding a header
+    private const bool giveHeader = true;
     // List of Enemies and Bullets in Scene for logging
     private List<Transform> Enemies = new List<Transform>();
     private static int enemyCounter = 0;
@@ -47,6 +50,13 @@ public class DataLogger : NetworkBehaviour {
     // The SyncVar attribute allows for either player to be shot and have it be recorded for both.
     [SyncVar]
     private bool trialLost = false;
+
+    void Start ()
+    {
+        // Create Header
+        if (WriteToFile && giveHeader)
+            LogHandler.markEvent("Object_Or_Event Trial_Count Pos_X Pos_Y Pos_Z Rot_X Rot_Y Rot_Z");
+    }
 
 	void FixedUpdate () {
         // Write to file every FixedUpdate
@@ -72,7 +82,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Player " + Player.transform.position + " " + Player.transform.rotation);
             Vector3 PlayerPos = Player.position;
             Quaternion PlayerRot = Player.rotation;
-            LogHandler.markEvent(PlayerName + " " + trialCount + " " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
+            LogHandler.markEvent("LocalPlayer " + trialCount + " " + PlayerPos.x + " " + PlayerPos.y + " " + PlayerPos.z + " " + PlayerRot.x + " " + PlayerRot.y + " " + PlayerRot.z);
         }
 
         if (RightHand)
@@ -81,7 +91,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Right Hand " + RightHand.transform.position + " " + RightHand.transform.rotation);
             Vector3 RightHandPos = RightHand.position;
             Quaternion RightHandRot = RightHand.rotation;
-            LogHandler.markEvent(PlayerName + "_RightHand " + trialCount + " " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
+            LogHandler.markEvent("LocalPlayer_RightHand " + trialCount + " " + RightHandPos.x + " " + RightHandPos.y + " " + RightHandPos.z + " " + RightHandRot.x + " " + RightHandRot.y + " " + RightHandRot.z);
         }
 
         if (LeftHand)
@@ -90,7 +100,7 @@ public class DataLogger : NetworkBehaviour {
             //Debug.Log("Left Hand " + LeftHand.transform.position + " " + LeftHand.transform.rotation);
             Vector3 LeftHandPos = LeftHand.position;
             Quaternion LeftHandRot = LeftHand.rotation;
-            LogHandler.markEvent(PlayerName + "_LeftHand " + trialCount + " " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
+            LogHandler.markEvent("LocalPlayer_LeftHand " + trialCount + " " + LeftHandPos.x + " " + LeftHandPos.y + " " + LeftHandPos.z + " " + LeftHandRot.x + " " + LeftHandRot.y + " " + LeftHandRot.z);
         }
     }
 
@@ -146,7 +156,12 @@ public class DataLogger : NetworkBehaviour {
         Vector3 hitPos = hit.position;
         Quaternion hitRot = hit.rotation;
         if (WriteToFile)
-            LogHandler.markEvent(hit.name + "Hit " + trialCount + " " + hitPos.x + " " + hitPos.y + " " + hitPos.z + " " + hitRot.x + " " + hitRot.y + " " + hitRot.z);
+        {
+            if (hit.gameObject == Player.gameObject)
+                LogHandler.markEvent("LocalPlayer" + "Hit " + trialCount + " " + hitPos.x + " " + hitPos.y + " " + hitPos.z + " " + hitRot.x + " " + hitRot.y + " " + hitRot.z);
+            else
+                LogHandler.markEvent(hit.name + "Hit " + trialCount + " " + hitPos.x + " " + hitPos.y + " " + hitPos.z + " " + hitRot.x + " " + hitRot.y + " " + hitRot.z);
+        }
 
         if(hit.CompareTag("Player"))
             trialLost = true;
