@@ -1,3 +1,11 @@
+/* Original Code from SteamVR Essentials
+ * Purpose: Handle Player Entry into Server
+ * 
+ * Modifications made by Mohammad Alam
+ *  - Added Player Name change capability. Currently, only works for server player
+ *      - Currently Disabled: Uncomment Line to reenable
+ */
+
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
@@ -25,7 +33,7 @@ public class CustomNetworkManager : NetworkManager {
 			newPlayer = (GameObject)Instantiate (this.playerPrefab, spawnPoint.position, spawnPoint.rotation);
 		}
         NetworkServer.AddPlayerForConnection (conn, newPlayer, playerControllerId);
-        newPlayer.name = "Player" + (playerCount + 1);
+        //newPlayer.name = "Player" + (playerCount + 1);
 		playerCount++;
 	}
 

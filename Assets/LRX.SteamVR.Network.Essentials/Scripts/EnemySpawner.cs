@@ -1,4 +1,14 @@
-﻿using UnityEngine;
+﻿/* Original Code from SteamVR Essentials
+ * Purpose: Handle Enemy spawning
+ * 
+ * Modifications made by Mohammad Alam
+ *  - Changed spawning method 
+ *      - Now handled with event manager (Enemy count incrementing/decrementing and spawning)
+ *      - Spawnpoints now determine number of enemies spawned
+ *      - 1 Enemy is always spawned. Subsequent enemies have a 50% probability of spawning.
+ */
+
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
 using System.Collections;
@@ -19,9 +29,11 @@ public class EnemySpawner : NetworkBehaviour {
 
     void Start ()
     {
+        // Maximum number of enemies determined by number of spawnpoints
         numberOfEnemies = locations.Count;
     }
 
+    // EventManager Calls
     void OnEnable()
     {
         EventManager.StartListening("Spawn", SpawnEnemies);

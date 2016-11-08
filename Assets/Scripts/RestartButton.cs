@@ -1,16 +1,27 @@
-﻿using UnityEngine;
+﻿/* Code by Mohammad Alam
+ * Purpose: Code to restart game or start new trial
+ *      When the button is touched, a wall will appear to 
+ *      tell the players not to move forward for RespawnTimer 
+ *      seconds. After those seconds, it will disappear and
+ *      the enemies will respawn.
+ * 
+ * Interacts with the DataLogger to log event of new trial start.
+ * and to update WaitingWallText.
+ * 
+ * Plays a little beeping sound when touched.
+ * 
+ */
+
+// Beeping Sound Courtesy of Freesound.org: http://freesound.org/people/MeTwo99/sounds/148694/?page=1#comment
+
+using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 
 public class RestartButton : NetworkBehaviour, ITouchable
 {
-    // This is the Restart Button code. 
-    // Purpose: When the button is touched, a wall will appear 
-    //          to tell the players not to move forward for RespawnTimer
-    //          seconds. After those seconds, it
-
     // Respawn Timer Constant
-    public float RespawnTimer = 5f;
+    public float RespawnTimer = 3f;
     // Get EnemySpawner 
     public EnemySpawner enemyspawner;
     // Get our Waiting Wall Object
@@ -26,6 +37,8 @@ public class RestartButton : NetworkBehaviour, ITouchable
     private bool Respawning = false;
     private Vector3 WaitPos;
     private Vector3 GoPos;
+    // Beepy Sound
+    private AudioSource audioSrc;
 
     void Start()
     {
@@ -34,6 +47,8 @@ public class RestartButton : NetworkBehaviour, ITouchable
 
         if (dataloggerTest)
             datalogger = dataloggerTest.GetComponent<DataLogger>();
+
+        audioSrc = GetComponent<AudioSource>();
 
         // Get the EnemySpawner GameObject
         if (!enemyspawner)
@@ -90,7 +105,7 @@ public class RestartButton : NetworkBehaviour, ITouchable
         }
     }
 
-    private IEnumerator WaitforReset(float waitTime)
+    private IEnumerator WaitforReset(float totalWaitTime)
     {
         if (Respawning)
             yield break;
@@ -98,13 +113,30 @@ public class RestartButton : NetworkBehaviour, ITouchable
         Respawning = true;
         RpcWaiting(true);
 
-        yield return new WaitForSeconds(waitTime);
+        for (float i = 0; i <= totalWaitTime; i++)
+        {
+            if (audioSrc)
+            {
+                if (i == 0)
+                    audioSrc.pitch = 0.5f;
+                else
+                    audioSrc.pitch = 1;
+                audioSrc.Play();
+            }
+            yield return new WaitForSeconds(1);
+        }
 
         // Button has been used, Spawn enemies
         enemyspawner.SpawnEnemies();
 
         RpcWaiting(false);
         Respawning = false;
+
+        if (audioSrc)
+        {
+            audioSrc.pitch = 2;
+            audioSrc.Play();
+        }
     }
 
     // This is for the controller part

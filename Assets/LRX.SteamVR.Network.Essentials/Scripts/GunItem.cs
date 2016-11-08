@@ -1,10 +1,21 @@
-﻿using UnityEngine;
+﻿/* Original Code from SteamVR Essentials
+ * Allows Guns or, in this case, GunHands to fire when used and held in VR using controller triggers
+ * 
+ * Modifications made by Mohammad Alam
+ *  - Changed method for gunfire.
+ */
+
+// Gun Shot Sound Courtesy of Freesound.org: http://freesound.org/people/Brokenphono/sounds/344143/
+
+using UnityEngine;
 using UnityEngine.Networking;
 
 public class GunItem : NetworkBehaviour, IUsable {
     public GameObject projectilePrefab;
+    public AudioClip gunShotSound;
     private Transform barrel;
     public float speed = 6f;
+    public float soundVol = 0.01f;
 
     void Start()
     {
@@ -13,10 +24,13 @@ public class GunItem : NetworkBehaviour, IUsable {
 
 	public void StartUsing(NetworkInstanceId handId)
     {
+        // Spawn Bullet
         var projectile = (GameObject)Instantiate(projectilePrefab, barrel.position, barrel.rotation);
-        //projectile.GetComponent<Rigidbody>().AddForce(barrel.forward * speed, ForceMode.VelocityChange);  // is asynchronously and won't work here
-        //projectile.GetComponent<Rigidbody>().velocity = barrel.forward * speed;
         projectile.GetComponent<Rigidbody>().velocity = barrel.up * speed;
+
+        // Play Sound
+        if(gunShotSound)
+            AudioSource.PlayClipAtPoint(gunShotSound,barrel.position, soundVol);
 
         NetworkServer.Spawn(projectile);
     }
