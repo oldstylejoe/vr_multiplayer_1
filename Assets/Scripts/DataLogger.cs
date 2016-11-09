@@ -23,6 +23,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class DataLogger : NetworkBehaviour {
 
@@ -33,6 +34,7 @@ public class DataLogger : NetworkBehaviour {
     // Unity Text UI for the waiting wall
     public Text WaitingWallText;
 
+    private string subjName;
     // Boolean for turning on and off file I/O
     private const bool WriteToFile = true;
     // Boolean for adding a header

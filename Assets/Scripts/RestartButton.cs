@@ -21,7 +21,7 @@ using System.Collections;
 public class RestartButton : NetworkBehaviour, ITouchable
 {
     // Respawn Timer Constant
-    public float RespawnTimer = 3f;
+    public float RespawnTimer = 10f;
     // Get EnemySpawner 
     public EnemySpawner enemyspawner;
     // Get our Waiting Wall Object
@@ -105,25 +105,43 @@ public class RestartButton : NetworkBehaviour, ITouchable
         }
     }
 
+    [Command]
+    private void CmdReadyBeep (float pitchSet)
+    {
+        if (audioSrc)
+        {
+            RpcPlayBeep(pitchSet);
+        }
+    }
+
+    [ClientRpc]
+    private void RpcPlayBeep (float pitchSet)
+    {
+        audioSrc.pitch = pitchSet;
+        audioSrc.Play();
+
+    }
+
     private IEnumerator WaitforReset(float totalWaitTime)
     {
         if (Respawning)
             yield break;
 
+        float startTime = Time.time;
+
         Respawning = true;
         RpcWaiting(true);
 
-        for (float i = 0; i <= totalWaitTime; i++)
+        CmdReadyBeep(0.5f);
+
+        yield return new WaitForSeconds(totalWaitTime - 3f);
+
+        float waitSec = Random.Range(1,1.5f);
+
+        while (totalWaitTime > Time.time - startTime)
         {
-            if (audioSrc)
-            {
-                if (i == 0)
-                    audioSrc.pitch = 0.5f;
-                else
-                    audioSrc.pitch = 1;
-                audioSrc.Play();
-            }
-            yield return new WaitForSeconds(1);
+            CmdReadyBeep(1f);
+            yield return new WaitForSeconds(waitSec);
         }
 
         // Button has been used, Spawn enemies
@@ -134,7 +152,7 @@ public class RestartButton : NetworkBehaviour, ITouchable
 
         if (audioSrc)
         {
-            audioSrc.pitch = 2;
+            audioSrc.pitch = 2f;
             audioSrc.Play();
         }
     }

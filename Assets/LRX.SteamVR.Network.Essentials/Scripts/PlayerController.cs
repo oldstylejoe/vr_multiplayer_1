@@ -23,6 +23,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 
+[RequireComponent(typeof(AudioSource))]
 public class PlayerController : NetworkBehaviour
 {
     // Original Variables
@@ -38,8 +39,7 @@ public class PlayerController : NetworkBehaviour
     private Camera mainCam;
     private Transform GunArm;
     // For Sound
-    public AudioClip gunShotSound;
-    public float soundVol = 0.01f;
+    public AudioSource audioSrc;
     public override void OnStartLocalPlayer()
 	{
         // Initialize
@@ -50,6 +50,7 @@ public class PlayerController : NetworkBehaviour
         mainCam = Camera.main;
         GunArm = transform.GetChild(2);
         Transform HUDCanv = transform.GetChild(3);
+        audioSrc = GetComponent<AudioSource>();
 
         // attach camera to player.. 1st person view..
         mainCam.transform.parent = transform;
@@ -116,9 +117,17 @@ public class PlayerController : NetworkBehaviour
 		}
 	}
 
-	// This [Command] code is called on the Client …
-	// … but it is run on the Server!
-	[Command]
+    [ClientRpc]
+    private void RpcPlayGunShot(Vector3 soundStart)
+    {
+        // Play Sound over network 
+        if (audioSrc)
+            audioSrc.Play();
+    }
+
+    // This [Command] code is called on the Client …
+    // … but it is run on the Server!
+    [Command]
 	protected void CmdFire()
 	{
 		var bullet = (GameObject)Instantiate(
@@ -129,9 +138,8 @@ public class PlayerController : NetworkBehaviour
 		// Add velocity to the bullet
 		bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * 6;
 
-        // Play Sound
-        if (gunShotSound)
-            AudioSource.PlayClipAtPoint(gunShotSound, bulletSpawn.position, soundVol);
+        // Play Sound over network
+        RpcPlayGunShot(bulletSpawn.position);
 
         // Spawn the bullet on the Clients
         NetworkServer.Spawn(bullet);

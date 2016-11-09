@@ -10,27 +10,35 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
+[RequireComponent(typeof(AudioSource))]
 public class GunItem : NetworkBehaviour, IUsable {
     public GameObject projectilePrefab;
-    public AudioClip gunShotSound;
+    private AudioSource audioSrc;
     private Transform barrel;
     public float speed = 6f;
-    public float soundVol = 0.01f;
 
     void Start()
     {
         barrel = transform.FindChild("Barrel");
+        audioSrc = GetComponent<AudioSource>();
     }
 
-	public void StartUsing(NetworkInstanceId handId)
+    [ClientRpc]
+    private void RpcPlayGunShot(Vector3 soundStart)
+    {
+        // Play Sound over network 
+        if (audioSrc)
+            audioSrc.Play();
+    }
+
+    public void StartUsing(NetworkInstanceId handId)
     {
         // Spawn Bullet
         var projectile = (GameObject)Instantiate(projectilePrefab, barrel.position, barrel.rotation);
         projectile.GetComponent<Rigidbody>().velocity = barrel.up * speed;
 
         // Play Sound
-        if(gunShotSound)
-            AudioSource.PlayClipAtPoint(gunShotSound,barrel.position, soundVol);
+        RpcPlayGunShot(barrel.position);
 
         NetworkServer.Spawn(projectile);
     }

@@ -7,6 +7,7 @@
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Collections;
+using System.IO;
 
 public class Job : Threader
 {
@@ -39,6 +40,30 @@ public class LogHandler : MonoBehaviour {
     private static string data = "";
     const int RECORDING_FILE_BUFFER_SIZE = 1000;
     private static string subjName = "subject0";
+
+    void Awake()
+    {
+        subjName = "default";
+
+        // Create filePath if it does not exist
+        (new FileInfo("c:/DataLogs/")).Directory.Create();
+
+        if (File.Exists("c:/DataLogs/subject_id.txt"))
+        {
+            foreach (string l in File.ReadAllLines("c:/DataLogs/subject_id.txt"))
+            {
+                if (l.Length > 1)
+                {
+                    subjName = l;
+                }
+            }
+        }
+        else
+        {
+            File.CreateText("c:/DataLogs/subject_id.txt");
+        }
+    }
+
 
     // Use this for initialization
     void Start () {

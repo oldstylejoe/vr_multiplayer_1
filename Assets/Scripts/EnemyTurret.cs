@@ -10,6 +10,7 @@
  * 
  * Interacts with the DataLogger to start logging new enemy transform.
  * 
+ * One Player should lose when up against both or faced the wrong way. 
  */
 
 // Gun Shot Sound Courtesy of Freesound.org: http://freesound.org/people/Brokenphono/sounds/344143/
@@ -17,6 +18,7 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
+[RequireComponent(typeof(AudioSource))]
 public class EnemyTurret : NetworkBehaviour
 {
     public float rotationSpeed = 20f;
@@ -25,7 +27,6 @@ public class EnemyTurret : NetworkBehaviour
     public Transform bulletSpawn;
     public Transform gun;
     public float bulletSpeed = 6f;
-    public float startFireRate = 0.100f;
     public float fireRate = 1f;
 
     private GameObject target;
@@ -34,14 +35,12 @@ public class EnemyTurret : NetworkBehaviour
     private Quaternion RestRotation;
     private float fireTimer = 0.0f;
     private DataLogger datalogger;
-    private bool fireFaster = false;
 
     // Necessary to add to enemy count when spawned
     public EnemySpawner enemyspawner;
 
     // For Sound
-    public AudioClip gunShotSound;
-    public float soundVol = 0.01f;
+    public AudioSource audioSrc;
 
     void Start()
     {
@@ -57,6 +56,8 @@ public class EnemyTurret : NetworkBehaviour
             datalogger = dataloggerTest.GetComponent<DataLogger>();
             datalogger.AddEnemy(this.transform);
         }
+
+        audioSrc = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -81,24 +82,9 @@ public class EnemyTurret : NetworkBehaviour
 
             // Check when fireRate seconds have passed and then fire.
             fireTimer += Time.deltaTime;
-            if (!fireFaster)
+            if (fireTimer >= fireRate)
             {
-                if (fireTimer >= startFireRate)
-                {
-                    if (Random.Range(0, 2) == 1)
-                    {
-                        CmdFire();
-                    }
-                    fireTimer = 0.0f;
-                    fireFaster = true;
-                }
-            }
-            else if (fireTimer >= fireRate)
-            {
-                if (Random.Range(0, 2) == 1)
-                {
-                    CmdFire();
-                }
+                CmdFire();
                 fireTimer = 0.0f;
             }
         }
@@ -154,6 +140,14 @@ public class EnemyTurret : NetworkBehaviour
         }
     }
 
+    [ClientRpc]
+    private void RpcPlayGunShot(Vector3 soundStart)
+    {
+        // Play Sound over network 
+        if (audioSrc)
+            audioSrc.Play();
+    }
+
     // This is borrowed from the original gun script.
     // This [Command] code for shooting is called on the Client …
     // … but it is run on the Server!
@@ -164,14 +158,13 @@ public class EnemyTurret : NetworkBehaviour
         var bullet = (GameObject)Instantiate(
             bulletPrefab,
             bulletSpawn.position,
-            bulletSpawn.rotation * Quaternion.Euler(Random.Range(-10.0f,10.0f), Random.Range(-10.0f, 10.0f), 0f));
+            bulletSpawn.rotation * Quaternion.Euler(Random.Range(-5.0f,5.0f), Random.Range(-5.0f, 5.0f), 0f));
 
         // Add velocity to the bullet
         bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * bulletSpeed;
 
         // Play Sound
-        if (gunShotSound)
-            AudioSource.PlayClipAtPoint(gunShotSound, bulletSpawn.position, soundVol);
+        RpcPlayGunShot(bulletSpawn.position);
 
         // Spawn the bullet on the Clients
         NetworkServer.Spawn(bullet);
