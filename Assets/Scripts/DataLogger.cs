@@ -32,6 +32,7 @@ public class DataLogger : NetworkBehaviour {
     public Transform RightHand;
     public Transform LeftHand;
     // Unity Text UI for the waiting wall
+    public GameObject enemySpawner;
     public Text WaitingWallText;
 
     private string subjName;
@@ -217,7 +218,8 @@ public class DataLogger : NetworkBehaviour {
 
         trialCount++;
 
-        WaitingWallText.text = "Please Wait for Trial " + trialCount + " to start" + System.Environment.NewLine + System.Environment.NewLine +
+        WaitingWallText.text = "Please Wait for Trial " + trialCount + " to start" + System.Environment.NewLine + 
+            (enemySpawner.GetComponent<EnemySpawner>().doShoot? "Enemies shoot":"Enemies don't shoot") + System.Environment.NewLine +
                                "Current Stats:" + System.Environment.NewLine +
                                "Wins:    " + winCount + System.Environment.NewLine +
                                "Losses:  " + lossCount + System.Environment.NewLine;

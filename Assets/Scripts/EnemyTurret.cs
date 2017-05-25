@@ -63,11 +63,6 @@ public class EnemyTurret : NetworkBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown("space"))
-        {
-            doShoot = !doShoot;
-        }
-
         // Perform target actions when targets have been found
         if (target)
         {

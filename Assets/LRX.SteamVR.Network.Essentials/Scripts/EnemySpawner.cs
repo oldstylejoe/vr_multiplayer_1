@@ -25,6 +25,9 @@ public class EnemySpawner : NetworkBehaviour {
     private int numberOfEnemies;
 
     [SyncVar]
+    public bool doShoot = true;
+
+    [SyncVar]
     private int NumEnemiesSpawned = 0;
 
     void Start ()
@@ -33,12 +36,21 @@ public class EnemySpawner : NetworkBehaviour {
         numberOfEnemies = locations.Count;
     }
 
+    void Update ()
+    {
+        if (Input.GetKeyDown("space"))
+        {
+            EventManager.TriggerEvent("ToggleShootBack");
+        }
+    }
+
     // EventManager Calls
     void OnEnable()
     {
         EventManager.StartListening("Spawn", SpawnEnemies);
         EventManager.StartListening("EnemyInc", EnemyInc);
         EventManager.StartListening("EnemyDec", EnemyDec);
+        EventManager.StartListening("ToggleShootBack", ToggleShootBack);
     }
 
     void OnDisable()
@@ -46,6 +58,7 @@ public class EnemySpawner : NetworkBehaviour {
         EventManager.StopListening("Spawn", SpawnEnemies);
         EventManager.StopListening("EnemyInc", EnemyInc);
         EventManager.StopListening("EnemyDec", EnemyDec);
+        EventManager.StartListening("ToggleShootBack", ToggleShootBack);
     }
 
     public void SpawnEnemies ()
@@ -66,6 +79,7 @@ public class EnemySpawner : NetworkBehaviour {
             var loc = indexes[Random.Range(0, indexes.Count)];
 
             var enemy = (GameObject)Instantiate(enemyPrefab, locations[loc].transform.position, locations[loc].transform.rotation);
+            enemy.GetComponent<EnemyTurret>().doShoot = doShoot;
             NetworkServer.Spawn(enemy);
 
             indexes.Remove(loc);
@@ -73,6 +87,12 @@ public class EnemySpawner : NetworkBehaviour {
             if (Random.Range(0, 2) == 0)
                 break;
         }
+    }
+
+    //control if enemies shoot back (no effect on current)
+    public void ToggleShootBack()
+    {
+        doShoot = !doShoot;
     }
 
     // Events for the NumEnemiesSpawned allows for NumEnemiesSpawned variable to be changed out of scope.
