@@ -28,6 +28,7 @@ public class EnemyTurret : NetworkBehaviour
     public Transform gun;
     public float bulletSpeed = 6f;
     public float fireRate = 1f;
+    public bool doShoot = true;
 
     private GameObject target;
     private Vector3 lastKnownPosition = Vector3.zero;
@@ -62,6 +63,11 @@ public class EnemyTurret : NetworkBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown("space"))
+        {
+            doShoot = !doShoot;
+        }
+
         // Perform target actions when targets have been found
         if (target)
         {
@@ -154,6 +160,11 @@ public class EnemyTurret : NetworkBehaviour
     [Command]
     protected void CmdFire()
     {
+        if (!doShoot) {
+            //to disable the firing
+            return;
+        }
+
         // Create the Bullet from the Bullet Prefab
         var bullet = (GameObject)Instantiate(
             bulletPrefab,
